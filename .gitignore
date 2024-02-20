@@ -1,0 +1,5 @@
+*.d
+*.o
+
+# CERN data files
+*.root
