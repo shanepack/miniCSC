@@ -1,9 +1,5 @@
-// Include necessary libraries
 #include "TF1.h"
-#include "TF2.h"
-#include "TH1.h"
 #include "TH2.h"
-#include "TRandom.h"
 #include <TCanvas.h>
 #include <TFile.h>
 #include <TGraph.h>
@@ -16,11 +12,12 @@
 #include <sstream>
 #include <string>
 
+using namespace std;
+
 // Define constants
 static const int LUMI = 5;
 static const int hmaxx = 270; // Maximum value for the x-axis of the histogram
-static const char* FILE_NAME = "/home/fwoup/rootcode/RunII_allcharged_cav_ME11.txt";
-static const string FILE_DIR = "/home/fwoup/rootcode/";
+static const string FILE_DIR = "./";
 static const bool SCALING = true;
 
 float R_MIN;
@@ -28,8 +25,6 @@ float R_MAX;
 int R_BIN_NUM;
 float Z_BIN_NUM;
 float BIN_WIDTH;
-
-using namespace std;
 
 // Define sensitivity values for different particles
 std::map<std::string, double> sensitivity = {
@@ -155,10 +150,17 @@ TGraphErrors* getGraph(string particle = "allcharged", bool scale = false)
     return gr;
 }
 
-string particlePrecisionSetter(double val, int precision)
+/**
+ * Generate string containing val at x precision
+ *
+ * @param value Value to convert to string
+ * @param precision Number of points past decimal places to include
+ * @return String
+ */
+string precisionToStr(double value, int precision)
 {
     std::ostringstream ss;
-    ss << std::fixed << std::setprecision(precision) << val;
+    ss << std::fixed << std::setprecision(precision) << value;
     return ss.str();
 }
 
@@ -215,14 +217,11 @@ void plotFluka()
 
     l2->SetBorderSize(0);
     l2->SetFillStyle(0);
-    l2->AddEntry(gr_neutrons, ("neutron x" + particlePrecisionSetter(sensitivity["neutrons"], 3)).c_str(), "lp");
-    l2->AddEntry(gr_photons, ("photons x" + particlePrecisionSetter(sensitivity["photons"], 3)).c_str(), "lp");
-    l2->AddEntry(gr_allcharged, ("all charged x" + particlePrecisionSetter(sensitivity["allcharged"], 3)).c_str(), "lp");
+    l2->AddEntry(gr_neutrons, ("neutron x" + precisionToStr(sensitivity["neutrons"], 3)).c_str(), "lp");
+    l2->AddEntry(gr_photons, ("photons x" + precisionToStr(sensitivity["photons"], 3)).c_str(), "lp");
+    l2->AddEntry(gr_allcharged, ("all charged x" + precisionToStr(sensitivity["allcharged"], 3)).c_str(), "lp");
     l2->Draw();
 
     // Update the canvas
     c1->Update();
-
-    // Close the input file
-    // file.close();
 }
