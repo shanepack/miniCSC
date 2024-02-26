@@ -155,6 +155,13 @@ TGraphErrors* getGraph(string particle = "allcharged", bool scale = false)
     return gr;
 }
 
+string particlePrecisionSetter(double val, int precision)
+{
+    std::ostringstream ss;
+    ss << std::fixed << std::setprecision(precision) << val;
+    return ss.str();
+}
+
 // Function to plot Fluka data
 void plotFluka()
 {
@@ -205,11 +212,12 @@ void plotFluka()
     l1->Draw();
 
     TLegend* l2 = new TLegend(0.7, 0.47, 0.9, 0.85);
+
     l2->SetBorderSize(0);
     l2->SetFillStyle(0);
-    l2->AddEntry(gr_neutrons, ("neutron x" + ([](double val) { std::ostringstream ss; ss << std::fixed << std::setprecision(3) << val; return ss.str(); })(sensitivity["neutrons"])).c_str(), "lp");
-    l2->AddEntry(gr_photons, ("photons x" + ([](double val) { std::ostringstream ss; ss << std::fixed << std::setprecision(3) << val; return ss.str(); })(sensitivity["photons"])).c_str(), "lp");
-    l2->AddEntry(gr_allcharged, ("all charged x" + ([](double val) { std::ostringstream ss; ss << std::fixed << std::setprecision(3) << val; return ss.str(); })(sensitivity["allcharged"])).c_str(), "lp");
+    l2->AddEntry(gr_neutrons, ("neutron x" + particlePrecisionSetter(sensitivity["neutrons"], 3)).c_str(), "lp");
+    l2->AddEntry(gr_photons, ("photons x" + particlePrecisionSetter(sensitivity["photons"], 3)).c_str(), "lp");
+    l2->AddEntry(gr_allcharged, ("all charged x" + particlePrecisionSetter(sensitivity["allcharged"], 3)).c_str(), "lp");
     l2->Draw();
 
     // Update the canvas
