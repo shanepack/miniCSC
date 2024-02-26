@@ -3,3 +3,5 @@
 
 # CERN data files
 *.root
+*.txt
+*.png
