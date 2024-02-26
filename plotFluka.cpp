@@ -32,7 +32,7 @@ float BIN_WIDTH;
 using namespace std;
 
 // Define sensitivity values for different particles
-std::map<std::string, double> sensitivity = {
+map<string, double> sensitivity = {
     { "neutrons", 0.001 },
     { "photons", 0.01 },
     { "allcharged", 1.0 },
@@ -42,7 +42,7 @@ std::map<std::string, double> sensitivity = {
 };
 
 // Define color codes for different particles
-std::map<std::string, int> color = {
+map<string, int> color = {
     { "neutrons", 1 },
     { "photons", 4 },
     { "allcharged", 6 },
@@ -64,27 +64,27 @@ vector<string> parseFile(string particle)
     }
 
     // Read and parse lines 7, 8, and 9 to get the binning information
-    R_MIN = std::stof(data[6].substr(data[6].find(":") + 1)); // stof converts string to float
-    R_MAX = std::stof(data[7].substr(data[7].find(":") + 1));
-    R_BIN_NUM = std::stoi(data[8].substr(data[8].find(":") + 1)); // stoi converts string to int
-    Z_BIN_NUM = std::stof(data[9].substr(data[9].find(":") + 1));
+    R_MIN = stof(data[6].substr(data[6].find(":") + 1)); // stof converts string to float
+    R_MAX = stof(data[7].substr(data[7].find(":") + 1));
+    R_BIN_NUM = stoi(data[8].substr(data[8].find(":") + 1)); // stoi converts string to int
+    Z_BIN_NUM = stof(data[9].substr(data[9].find(":") + 1));
     // Calculate the bin width
     BIN_WIDTH = (R_MAX - R_MIN) / R_BIN_NUM;
     file.close();
     return data;
 }
 
-TGraphErrors* sumGraphs(std::vector<TGraphErrors*>& gr)
+TGraphErrors* sumGraphs(vector<TGraphErrors*>& gr)
 {
     int n = gr[0]->GetN();
     double rmin = gr[0]->GetPointX(0);
     double rmax = gr[0]->GetPointX(n - 1);
 
-    std::vector<TGraphErrors*> graphRatio;
+    vector<TGraphErrors*> graphRatio;
     graphRatio.push_back(new TGraphErrors(n));
     for (int i = 1; i < gr.size(); i++) {
         if (!(gr[i]->GetN() == n) || !(gr[i]->GetPointX(0) == rmin) || !(gr[i]->GetPointX(n - 1) == rmax)) {
-            std::cout << "sumGraph : not compatible x scale" << std::endl;
+            cout << "sumGraph : not compatible x scale" << endl;
             return nullptr;
         }
         graphRatio.push_back(new TGraphErrors(n));
@@ -157,8 +157,8 @@ TGraphErrors* getGraph(string particle = "allcharged", bool scale = false)
 
 string particlePrecisionSetter(double val, int precision)
 {
-    std::ostringstream ss;
-    ss << std::fixed << std::setprecision(precision) << val;
+    ostringstream ss;
+    ss << fixed << setprecision(precision) << val;
     return ss.str();
 }
 
@@ -173,7 +173,7 @@ void plotFluka()
     p1->SetLogy();
 
     // Set the title for the plot
-    std::string title = "Flux";
+    string title = "Flux";
     if (SCALING == true) title += " scaled";
     title += ";;Flux [Hz/cm^{2}]";
 
