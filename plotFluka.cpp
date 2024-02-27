@@ -177,7 +177,7 @@ void plotFluka()
     // Set the title for the plot
     string title = "Flux";
     if (SCALING == true) title += " scaled";
-    title += ";;Flux [Hz/cm^{2}]";
+    title += ";R [cm];Flux [Hz/cm^{2}]";
 
     // Create a 2D histogram for the plot
     TH2* h1 = new TH2F("h1", title.c_str(), 170, 100, hmaxx, 10000, 1, 1000000);
