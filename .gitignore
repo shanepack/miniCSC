@@ -9,3 +9,5 @@
 *.txt
 *.png
 *.sh
+
+output/
