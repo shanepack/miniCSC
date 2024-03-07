@@ -1,74 +1,55 @@
 import os
+import json
 
 
-def parse_txt_file(file_path):
-    # Initialize data structure
-    data = {
-        "Start": "",
-        "Stop": "",
-        "Data files": "",
-        "Data plots": "",
-        "0ALCT": 0,
-        "13CLCT": 0,
-        "32TMB": 0,
-    }
-
+def parse_txt(file_path: str, header_data, tmb_data):
     file = open(file_path, "r")
     lines = file.readlines()
 
     # Parse lines
     for line in lines:
-        if "Start" in line:
-            data["Start"] = lines[lines.index(line) + 1].strip()
-        elif "Stop" in line:
-            data["Stop"] = lines[lines.index(line) + 1].strip()
-        elif "Data files" in line:
+        # Header data stuff
+        if "Start" in line and "Start" in header_data:
+            header_data["Start"] = lines[lines.index(line) + 1].strip()
+        elif "Stop" in line and "Stop" in header_data:
+            header_data["Stop"] = lines[lines.index(line) + 1].strip()
+        elif (
+            "Data files" in line and "Data files" in header_data
+        ):  # Generates urls to plots and raw files
             url = lines[lines.index(line) + 1].strip()
-            tmpData = url.split("/")
-            if "http" not in tmpData[0]:
-                print("Refactoring url")
+            tmp_data = url.split("/")
+            if not tmp_data[0].startswith("http"):
                 # Removing unneeded parts
-                tmpData.remove("daq")
-                tmpData.remove("current")
-                tmpData[0] = tmpData[0][:-1]
-                tmpData.insert(0, "http:/")
-                url = "/".join(tmpData)
-            data["Data files"] = url
-            tmpPlots = url.split("/")
-            tmpPlots.insert(4, "Tests_results")
-            tmpPlots.insert(5, "Test_27_Cosmics")
-            tmpPlots[-1] = tmpPlots[-1][:-4] + ".plots"
-            tmpPlots.append("browse.html")
-            data["Data plots"] = "/".join(tmpPlots)
-            # Data files: http://emuchick2.cern.ch/data/csc_00000001_EmuRUI01_STEP_27s_000_240306_122210_UTC.raw
+                tmp_data.remove("daq")
+                tmp_data.remove("current")
+                tmp_data[0] = tmp_data[0][:-1]
+                tmp_data.insert(0, "http:/")
+                url = "/".join(tmp_data)
+            header_data["Data files"] = url
+            tmp_plots = url.split("/")
+            tmp_plots.insert(4, "Tests_results")
+            tmp_plots.insert(5, "Test_27_Cosmics")
+            tmp_plots[-1] = tmp_plots[-1][:-4] + ".plots"
+            tmp_plots.append("browse.html")
+            header_data["Data plots"] = "/".join(tmp_plots)
 
+        # Data stored in the tmb_dump
+        # ? Move to other function?
         else:
-            for key in ["0ALCT", "13CLCT", "32TMB"]:
+            # Only works if line has no other numbers
+            for key in tmb_data:
                 try:
                     splitStr = line.split()
                     if splitStr[0] == key + ":":
                         value = float(splitStr[-1]) / 10
-                        data[key] = value
+                        tmb_data[key] = value
 
                 except IndexError:
                     continue
-    return data
+    file.close()
+    return header_data | tmb_data
 
-
-<<<<<<< Updated upstream
-def process_directory(directory_path, output_file_path):
-    # Write to the output file
-    with open(output_file_path, "w", encoding="utf-8") as output_file:
-        print(f"writing to: {output_file_path}")
-        for filename in sorted(os.listdir(directory_path)):
-            if filename.endswith(".txt"):
-                filepath = os.path.join(dirname, filename)
-                file_data = parse_txt_file(filepath)
-                output_file.write(f"File: {filename}\n")
-                for key, value in file_data.items():
-                    output_file.write(f"{key}: {value}\n")
-                output_file.write("\n")  # Add a newline for readability between files
-=======
+  
 def get_run_num(file):
     return int(file.split("-")[0][1:])
 
@@ -140,13 +121,26 @@ def process_directory(directory):
             new_files.append(file)
 
     return sorted(new_files, key=get_run_num)
->>>>>>> Stashed changes
 
 
 if __name__ == "__main__":
     # Update these paths according to your local setup
-    dirname = os.path.dirname(__file__)
-    directory_path = dirname
-    output_file_path = os.path.join(dirname, "output/compiled_data_corrected.txt")
+    directory = os.path.dirname(__file__)
+    elog_out = os.path.join(directory, "output/elog_out.txt")
+    csv_out = os.path.join(directory, "output/csv_out.txt")
 
-    process_directory(directory_path, output_file_path)
+    files = process_directory(directory)
+
+    # Generate elog
+    print("Generating Elog at: ", elog_out)
+    elog_data = generate_elog(files)
+    elog_file = open(elog_out, "w")
+    elog_file.write(elog_data)
+    elog_file.close()
+
+    # Generate CSV
+    print("Generating CSV at: ", csv_out)
+    csv_data = generate_csv(files)
+    csv_file = open(csv_out, "w")
+    csv_file.write(csv_data)
+    csv_file.close()
