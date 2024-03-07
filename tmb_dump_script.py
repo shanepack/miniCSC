@@ -49,7 +49,7 @@ def parse_txt(file_path: str, header_data, tmb_data):
     file.close()
     return header_data | tmb_data
 
-
+  
 def get_run_num(file):
     return int(file.split("-")[0][1:])
 
@@ -99,9 +99,8 @@ def generate_csv(files: list[str]):
         buffer += file_split[0] + ","  # run num
         buffer += file_split[4] + ","  # source
         buffer += file_split[3] + ","  # hole num
-        buffer += str(data["0ALCT"]) + ","
-        buffer += str(data["20CLCT"]) + ","
-        buffer += str(data["32TMB"]) + ","
+        for key in tmb_data:  # tmb_data values
+            buffer += str(data[key]) + ","
         buffer += data["Data files"] + ","
         buffer += data["Data plots"] + ","
         buffer += data["Start"][:-4] + ","  # Removing UTC unit
