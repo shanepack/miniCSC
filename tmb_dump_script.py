@@ -49,7 +49,7 @@ def parse_txt(file_path: str, header_data, tmb_data):
     file.close()
     return header_data | tmb_data
 
-  
+
 def get_run_num(file):
     return int(file.split("-")[0][1:])
 
@@ -126,8 +126,11 @@ def process_directory(directory):
 if __name__ == "__main__":
     # Update these paths according to your local setup
     directory = os.path.dirname(__file__)
-    elog_out = os.path.join(directory, "output/elog_out.txt")
-    csv_out = os.path.join(directory, "output/csv_out.txt")
+    output_dir = os.path.join(directory, "output")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    elog_out = os.path.join(output_dir, "elog_out.txt")
+    csv_out = os.path.join(output_dir, "csv_out.txt")
 
     files = process_directory(directory)
 
