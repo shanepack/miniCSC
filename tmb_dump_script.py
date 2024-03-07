@@ -50,11 +50,6 @@ def parse_txt(file_path: str, header_data, tmb_data):
     return header_data | tmb_data
 
 
-def parse_csv_txt(filepath: str) -> str:
-    file = open(filepath, "r")
-    return ""
-
-
 def get_run_num(file):
     return int(file.split("-")[0][1:])
 
@@ -70,7 +65,7 @@ def generate_elog(files: list[str]):
     }
     tmb_data = {
         "0ALCT": 0,
-        "13CLCT": 0,
+        "20CLCT": 0,
         "32TMB": 0,
     }
     for file in files:
@@ -94,7 +89,7 @@ def generate_csv(files: list[str]):
     }
     tmb_data = {
         "0ALCT": 0,
-        "13CLCT": 0,
+        "20CLCT": 0,
         "32TMB": 0,
     }
     for file in files:
@@ -105,7 +100,7 @@ def generate_csv(files: list[str]):
         buffer += file_split[4] + ","  # source
         buffer += file_split[3] + ","  # hole num
         buffer += str(data["0ALCT"]) + ","
-        buffer += str(data["13CLCT"]) + ","
+        buffer += str(data["20CLCT"]) + ","
         buffer += str(data["32TMB"]) + ","
         buffer += data["Data files"] + ","
         buffer += data["Data plots"] + ","
