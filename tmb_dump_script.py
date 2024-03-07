@@ -55,6 +55,7 @@ def parse_txt_file(file_path):
     return data
 
 
+<<<<<<< Updated upstream
 def process_directory(directory_path, output_file_path):
     # Write to the output file
     with open(output_file_path, "w", encoding="utf-8") as output_file:
@@ -67,6 +68,79 @@ def process_directory(directory_path, output_file_path):
                 for key, value in file_data.items():
                     output_file.write(f"{key}: {value}\n")
                 output_file.write("\n")  # Add a newline for readability between files
+=======
+def get_run_num(file):
+    return int(file.split("-")[0][1:])
+
+
+def generate_elog(files: list[str]):
+    buffer = ""
+    # Initialize data structure
+    header_data = {
+        "Start": "",
+        "Stop": "",
+        "Data files": "",
+        "Data plots": "",
+    }
+    tmb_data = {
+        "0ALCT": 0,
+        "20CLCT": 0,
+        "32TMB": 0,
+    }
+    for file in files:
+        file_data = parse_txt(file, header_data, tmb_data)
+        buffer += f"File: {file}\n"
+        for key, value in file_data.items():
+            buffer += f"{key}: {value}\n"
+        buffer += "\n"
+    return buffer
+
+
+def generate_csv(files: list[str]):
+    buffer = ""
+    header_data = {
+        "Run": 0,
+        "Source": "",
+        "Data files": "",
+        "Data plots": "",
+        "Start": "",
+        "Stop": "",
+    }
+    tmb_data = {
+        "0ALCT": 0,
+        "20CLCT": 0,
+        "32TMB": 0,
+    }
+    for file in files:
+        data = parse_txt(file, header_data, tmb_data)
+        # print(json.dumps(file_data, indent=2))
+        file_split = file.split("-")
+        buffer += file_split[0] + ","  # run num
+        buffer += file_split[4] + ","  # source
+        buffer += file_split[3] + ","  # hole num
+        for key in tmb_data:  # tmb_data values
+            buffer += str(data[key]) + ","
+        buffer += data["Data files"] + ","
+        buffer += data["Data plots"] + ","
+        buffer += data["Start"][:-4] + ","  # Removing UTC unit
+        buffer += data["Stop"][:-4] + "\n"  # Removing UTC unit
+    return buffer
+
+
+def process_directory(directory):
+    files = os.listdir(directory)
+    new_files = []
+    for file in files:
+        if (
+            file.split("-")[0][1:].isdigit()
+            and file.endswith(".txt")
+            and file.startswith("r")
+        ):
+            print(f"Will process {file}")
+            new_files.append(file)
+
+    return sorted(new_files, key=get_run_num)
+>>>>>>> Stashed changes
 
 
 if __name__ == "__main__":
