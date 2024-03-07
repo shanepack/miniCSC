@@ -1,7 +1,7 @@
 import os
 
 
-def parse_txt_file(file_path):
+def parse_elog_txt(file_path: str):
     # Initialize data structure
     data = {
         "Start": "",
@@ -25,7 +25,8 @@ def parse_txt_file(file_path):
         elif "Data files" in line:
             url = lines[lines.index(line) + 1].strip()
             tmpData = url.split("/")
-            if "http" not in tmpData[0]:
+            # if "http" not in tmpData[0]:
+            if not tmpData[0].startswith("http"):
                 print("Refactoring url")
                 # Removing unneeded parts
                 tmpData.remove("daq")
@@ -40,7 +41,6 @@ def parse_txt_file(file_path):
             tmpPlots[-1] = tmpPlots[-1][:-4] + ".plots"
             tmpPlots.append("browse.html")
             data["Data plots"] = "/".join(tmpPlots)
-            # Data files: http://emuchick2.cern.ch/data/csc_00000001_EmuRUI01_STEP_27s_000_240306_122210_UTC.raw
 
         else:
             for key in ["0ALCT", "13CLCT", "32TMB"]:
@@ -52,27 +52,65 @@ def parse_txt_file(file_path):
 
                 except IndexError:
                     continue
+    file.close()
     return data
 
 
-def process_directory(directory_path, output_file_path):
-    # Write to the output file
-    with open(output_file_path, "w", encoding="utf-8") as output_file:
-        print(f"writing to: {output_file_path}")
-        for filename in sorted(os.listdir(directory_path)):
-            if filename.endswith(".txt"):
-                filepath = os.path.join(dirname, filename)
-                file_data = parse_txt_file(filepath)
-                output_file.write(f"File: {filename}\n")
-                for key, value in file_data.items():
-                    output_file.write(f"{key}: {value}\n")
-                output_file.write("\n")  # Add a newline for readability between files
+def parse_csv_txt(filepath: str) -> str:
+    file = open(filepath, "r")
+    return ""
+
+
+def get_run_num(file):
+    return int(file.split("-")[0][1:])
+
+
+def generate_elog(files: list[str]):
+    buffer = ""
+    for file in files:
+        file_data = parse_elog_txt(file)
+        buffer += f"File: {file}\n"
+        for key, value in file_data.items():
+            buffer += f"{key}: {value}\n"
+        buffer += "\n"
+    return buffer
+
+
+def generate_csv(files: list[str]):
+    buffer = ""
+    for file in files:
+        file_data = parse_csv_txt(file)
+        print(file_data)
+    pass
+
+
+def process_directory(directory):
+    files = os.listdir(directory)
+    new_files = []
+    for file in files:
+        if (
+            file.split("-")[0][1:].isdigit()
+            and file.endswith(".txt")
+            and file.startswith("r")
+        ):
+            print(f"Will process {file}")
+            new_files.append(file)
+
+    return sorted(new_files, key=get_run_num)
 
 
 if __name__ == "__main__":
     # Update these paths according to your local setup
-    dirname = os.path.dirname(__file__)
-    directory_path = dirname
-    output_file_path = os.path.join(dirname, "output/compiled_data_corrected.txt")
+    directory = os.path.dirname(__file__)
+    output_file = os.path.join(directory, "output/compiled_data_corrected.txt")
 
-    process_directory(directory_path, output_file_path)
+    files = process_directory(directory)
+
+    # Generate elog
+    print("Generating Elog at: ", output_file)
+    elog_data = generate_elog(files)
+    elog_file = open(output_file, "w")
+    elog_file.write(elog_data)
+    elog_file.close()
+
+    generate_csv(files)
