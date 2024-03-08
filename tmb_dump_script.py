@@ -13,8 +13,8 @@ def plog(msg, level: int = 1):
         pprint(msg)
 
 
-def log(*format: str, level: int = 1):
-    if VERBOSE and VERBOSE_LEVEL >= level:
+def log(*format: str):
+    if VERBOSE:
         for msg in format:
             print(msg, end=" ")
         print()
@@ -32,7 +32,7 @@ def parse_title(file_path: str):
         "Layers": title_split[2],
         "Layer Pos": "",
         "Hole": title_split[3],
-        "Source": title_split[4],
+        "Source": "NA",
         "Test": title_split[5],
         "HV": title_split[6],
         "Events": title_split[7][:-9],
@@ -45,6 +45,20 @@ def parse_title(file_path: str):
             data["Layer Pos"] = "Top Layer"
         case "L1+2":
             data["Layer Pos"] = "Both Layers"
+    source = title_split[4].title()
+    sym = ""
+    # Get element name
+    for ch in source:
+        if not ch.isdigit():
+            sym += ch
+
+    weight = ""
+    # Get atomic weight
+    for ch in source:
+        if ch.isdigit():
+            weight += ch
+
+    data["Source"] = sym + "-" + weight
     plog(data, level=1)
     return data
 
@@ -120,7 +134,7 @@ def generate_elog(files: list[str]):
         title_data = parse_title(file)
         file_data = parse_txt(file, header_data, tmb_data)
         title = f"{title_data['Layers']} ({title_data['Layer Pos']}) - {title_data['HV'][:-1]} V "
-        if title_data["Source"] == "N/A":
+        if title_data["Source"] == "NA":
             title += "(No Radiation Source)"
         else:
             title += f"({title_data['Source']} @ Hole #{title_data['Hole'][1:]})"
@@ -134,9 +148,9 @@ def generate_elog(files: list[str]):
         #     buffer += f"{key}: {value}\n"
         buffer += "Start: " + file_data["Start"] + "\n"
         buffer += "Stop: " + file_data["Stop"] + "\n"
-        buffer += "0ALCT: " + str(file_data["0ALCT"]) + "\n"
-        buffer += "20CLCT: " + str(file_data["20CLCT"]) + "\n"
-        buffer += "32TMB: " + str(file_data["32TMB"]) + "\n"
+        buffer += "0ALCT: " + str(file_data["0ALCT"]) + " Hz\n"
+        buffer += "20CLCT: " + str(file_data["20CLCT"]) + " Hz\n"
+        buffer += "32TMB: " + str(file_data["32TMB"]) + " Hz\n"
         buffer += "\n"
         if HTML:
             buffer += f'<a href="{file_data["Data plots"]}">Link to plots</a>\n'
@@ -239,7 +253,7 @@ if __name__ == "__main__":
 
     # Generate elog
     # if ELOG:
-    log("Generating Elog at: ", elog_out)
+    print("Generating Elog at: ", elog_out)
     elog_data = generate_elog(files)
     elog_file = open(elog_out, "w")
     elog_file.write(elog_data)
@@ -247,7 +261,7 @@ if __name__ == "__main__":
 
     # Generate CSV
     # if CSV:
-    log("Generating CSV at: ", csv_out)
+    print("Generating CSV at: ", csv_out)
     csv_data = generate_csv(files)
     csv_file = open(csv_out, "w")
     csv_file.write(csv_data)
