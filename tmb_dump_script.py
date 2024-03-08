@@ -1,16 +1,52 @@
 import os
+import ntpath
 import argparse
-import json
+from pprint import pprint
 
 VERBOSE = False
+VERBOSE_LEVEL = 1
 HTML = False
 
 
-def log(*format: str):
-    if VERBOSE:
+def plog(msg, level: int = 1):
+    if VERBOSE and VERBOSE_LEVEL >= level:
+        pprint(msg)
+
+
+def log(*format: str, level: int = 1):
+    if VERBOSE and VERBOSE_LEVEL >= level:
         for msg in format:
             print(msg, end=" ")
         print()
+
+
+def parse_title(file_path: str):
+    head, tail = ntpath.split(file_path)
+    file_title = tail or ntpath.basename(head)
+    log("Parsing file title:", file_title)
+    title_split = file_title.split("-")
+    # r5-mcsc1-L1+2-h1-cd109-27s-3600V-5000event.txt
+    data = {
+        "Run": title_split[0],
+        "Chamber": title_split[1],
+        "Layers": title_split[2],
+        "Layer Pos": "",
+        "Hole": title_split[3],
+        "Source": title_split[4],
+        "Test": title_split[5],
+        "HV": title_split[6],
+        "Events": title_split[7][:-9],
+    }
+    # TODO: make dynamically detect
+    match data["Layers"]:
+        case "L1":
+            data["Layer Pos"] = "Bottom Layer"
+        case "L2":
+            data["Layer Pos"] = "Top Layer"
+        case "L1+2":
+            data["Layer Pos"] = "Both Layers"
+    plog(data, level=1)
+    return data
 
 
 def parse_txt(file_path: str, header_data, tmb_data):
@@ -80,13 +116,20 @@ def generate_elog(files: list[str]):
         "20CLCT": 0,
         "32TMB": 0,
     }
-    if HTML:
-        log("Inserting HTML styling")
-        buffer += (
-            '<pre>\n<strong><span style="font-size:large">Title\n\n</span></strong>'
-        )
     for file in files:
+        title_data = parse_title(file)
         file_data = parse_txt(file, header_data, tmb_data)
+        title = f"{title_data['Layers']} ({title_data['Layer Pos']}) - {title_data['HV'][:-1]} V "
+        if title_data["Source"] == "N/A":
+            title += "(No Radiation Source)"
+        else:
+            title += f"({title_data['Source']} @ Hole #{title_data['Hole'][1:]})"
+        title += f" {title_data['Events']} Events"
+        if HTML:
+            log("Inserting HTML styling")
+            buffer += f'<pre>\n<strong><span style="font-size:large">{title}\n\n</span></strong>'
+        else:
+            buffer += f"{title}\n"
         # for key, value in file_data.items():
         #     buffer += f"{key}: {value}\n"
         buffer += "Start: " + file_data["Start"] + "\n"
@@ -94,8 +137,16 @@ def generate_elog(files: list[str]):
         buffer += "0ALCT: " + str(file_data["0ALCT"]) + "\n"
         buffer += "20CLCT: " + str(file_data["20CLCT"]) + "\n"
         buffer += "32TMB: " + str(file_data["32TMB"]) + "\n"
-
-    buffer += "</pre>"
+        buffer += "\n"
+        if HTML:
+            buffer += f'<a href="{file_data["Data plots"]}">Link to plots</a>\n'
+            buffer += (
+                f'<a href="{file_data["Data files"]}">Link to raw data files</a>\n'
+            )
+            buffer += "</pre>"
+        else:
+            buffer += file_data["Data plots"] + "\n"
+            buffer += file_data["Data files"] + "\n"
     # buffer += "</span></strong></pre>"
     return buffer
 
