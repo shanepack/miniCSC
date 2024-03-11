@@ -6,6 +6,7 @@
 #include <TGraphErrors.h>
 #include <TLegend.h>
 #include <TPad.h>
+#include <TStyle.h>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -168,11 +169,13 @@ string precisionToStr(double value, int precision)
 void plotFluka()
 {
     // Create a canvas for plotting
-    TCanvas* c1 = new TCanvas();
-    c1->Divide(1);
+    TCanvas* c1 = new TCanvas("c", "c", 800, 800);
+    c1->Divide(1, 2); //! Added 2 for test
     c1->cd(1);
     TVirtualPad* p1 = c1->GetPad(1); // Get the first pad
     p1->SetLogy();
+    p1->SetLeftMargin(.15);
+    p1->SetBottomMargin(0.01);
 
     // Set the title for the plot
     string title = "Flux";
@@ -183,10 +186,13 @@ void plotFluka()
     TH2* h1 = new TH2F("h1", title.c_str(), 170, 100, hmaxx, 10000, 1, 1000000);
 
     h1->Draw();
+    h1->GetXaxis()->Draw(); //! Remove if does nothing
 
     // Set the axis labels and offsets
-    h1->GetXaxis()->SetTitleOffset(1.2);
+    h1->GetXaxis()->SetTitleOffset(0.9);
     h1->GetXaxis()->SetLabelOffset(1.0);
+    h1->GetXaxis()->SetLabelSize(0.08); //? This is commented out in the original code. Assumed to be used for x-axis numbering in some way.
+    h1->GetXaxis()->SetLabelColor(kBlack);
     h1->GetYaxis()->SetTitleOffset(1.0);
     h1->GetYaxis()->SetTitleSize(0.08);
     h1->GetYaxis()->SetLabelSize(0.08);
