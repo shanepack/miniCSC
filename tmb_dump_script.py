@@ -144,7 +144,7 @@ def generate_elog(files_data: list[dict]):
         title_data = data["title_data"]
         file_data = data["file_data"]
         title = f"{title_data['Layers']} ({title_data['Layer Pos']}) - {title_data['HV'][:-1]} V "
-        if title_data["Source"] == "NA":
+        if title_data["Source"] == "Na-":
             title += "(No Radiation Source)"
         else:
             title += f"({title_data['Source']} @ Hole #{title_data['Hole'][1:]})"
