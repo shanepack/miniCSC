@@ -125,7 +125,6 @@ def get_run_num(file):
     return int(file.split("-")[0][1:])
 
 
-# TODO: doing some funky stuff to get the right data
 def generate_elog(files: list[str]):
     buffer = ""
     for file in files:
@@ -149,7 +148,6 @@ def generate_elog(files: list[str]):
         buffer += "0ALCT: " + str(file_data["TMB Dump"][0] / DUMP_TIME) + " Hz\n"
         buffer += "20CLCT: " + str(file_data["TMB Dump"][20] / DUMP_TIME) + " Hz\n"
         buffer += "32TMB: " + str(file_data["TMB Dump"][32] / DUMP_TIME) + " Hz\n"
-        buffer += "\n"
         if HTML:
             buffer += f'<a href="{file_data["Data plots"]}">Link to plots</a>\n'
             buffer += (
@@ -159,6 +157,7 @@ def generate_elog(files: list[str]):
         else:
             buffer += file_data["Data plots"] + "\n"
             buffer += file_data["Data files"] + "\n"
+        buffer += "\n"
     # buffer += "</span></strong></pre>"
     return buffer
 
