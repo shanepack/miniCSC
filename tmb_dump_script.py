@@ -41,6 +41,8 @@ def parse_title(file_path: str):
             data["Layer Pos"] = "Top Layer"
         case "L1+2":
             data["Layer Pos"] = "Both Layers"
+        case "L1+L2":
+            data["Layer Pos"] = "Both Layers"
 
     # Rad source formatting
     source = title_split[4].title()
@@ -121,15 +123,26 @@ def parse_txt(file_path: str):
     return data
 
 
+def parse_files(files: list[str]) -> list[dict]:
+    print(f"Extracting data from {len(files)} files.")
+    data_list = [{"title_data": {}, "file_data": {}} for i in range(len(files))]
+    i = 0
+    for file in files:
+        data_list[i]["title_data"] = parse_title(file)
+        data_list[i]["file_data"] = parse_txt(file)
+        i += 1
+    return data_list
+
+
 def get_run_num(file):
     return int(file.split("-")[0][1:])
 
 
-def generate_elog(files: list[str]):
+def generate_elog(files_data: list[dict]):
     buffer = ""
-    for file in files:
-        title_data = parse_title(file)
-        file_data = parse_txt(file)
+    for data in files_data:
+        title_data = data["title_data"]
+        file_data = data["file_data"]
         title = f"{title_data['Layers']} ({title_data['Layer Pos']}) - {title_data['HV'][:-1]} V "
         if title_data["Source"] == "NA":
             title += "(No Radiation Source)"
@@ -162,21 +175,21 @@ def generate_elog(files: list[str]):
     return buffer
 
 
-def generate_csv(files: list[str]):
+def generate_csv(files_data: list[dict]):
     buffer = ""
-    for file in files:
-        data = parse_txt(file)
-        file_split = file.split("-")
-        buffer += file_split[0] + ","  # run num
-        buffer += file_split[4] + ","  # source
-        buffer += file_split[3] + ","  # hole num
-        buffer += str(data["TMB Dump"][0] / DUMP_TIME) + ","
-        buffer += str(data["TMB Dump"][20] / DUMP_TIME) + ","
-        buffer += str(data["TMB Dump"][32] / DUMP_TIME) + ","
-        buffer += data["Data files"] + ","
-        buffer += data["Data plots"] + ","
-        buffer += data["Start"][:-4] + ","  # Removing UTC unit
-        buffer += data["Stop"][:-4] + "\n"  # Removing UTC unit
+    for data in files_data:
+        title_data = data["title_data"]
+        file_data = data["file_data"]
+        buffer += title_data["Run"] + ","  # run num
+        buffer += title_data["Source"] + ","  # source
+        buffer += title_data["Hole"] + ","  # hole num
+        buffer += str(file_data["TMB Dump"][0] / DUMP_TIME) + ","
+        buffer += str(file_data["TMB Dump"][20] / DUMP_TIME) + ","
+        buffer += str(file_data["TMB Dump"][32] / DUMP_TIME) + ","
+        buffer += file_data["Data files"] + ","
+        buffer += file_data["Data plots"] + ","
+        buffer += file_data["Start"][:-4] + ","  # Removing UTC unit
+        buffer += file_data["Stop"][:-4] + "\n"  # Removing UTC unit
     return buffer
 
 
@@ -250,12 +263,16 @@ if __name__ == "__main__":
     csv_out = os.path.join(output_dir, "csv_out.txt")
 
     files = parse_directory(directory, args.num)
-    print(f"Extracting data from {len(files)} files.")
+    if len(files) == 0:
+        print(f"Cannot find files in {directory}. Stopping")
+        exit(1)
+
+    data = parse_files(files)
 
     # Generate elog
     # if ELOG:
     print("Generating Elog at: ", elog_out)
-    elog_data = generate_elog(files)
+    elog_data = generate_elog(data)
     elog_file = open(elog_out, "w")
     elog_file.write(elog_data)
     elog_file.close()
@@ -263,7 +280,7 @@ if __name__ == "__main__":
     # Generate CSV
     # if CSV:
     print("Generating CSV at: ", csv_out)
-    csv_data = generate_csv(files)
+    csv_data = generate_csv(data)
     csv_file = open(csv_out, "w")
     csv_file.write(csv_data)
     csv_file.close()
