@@ -76,6 +76,12 @@ def parse_txt(file_path: str):
 
     # Parse lines
     for line in lines:
+        # Check if line is empty
+        if len(line) < 2:
+            continue
+        # Comment checking
+        if line[0] == "#" or line[1] == "#":
+            continue
         # Header data stuff
         if "Start" in line:
             data["Start"] = lines[lines.index(line) + 1].strip()
