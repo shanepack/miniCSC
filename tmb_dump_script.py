@@ -187,6 +187,8 @@ def generate_csv(files_data: list[dict]):
         title_data = data["title_data"]
         file_data = data["file_data"]
         buffer += title_data["Run"] + ","  # run num
+        buffer += title_data["Layers"] + ","
+        buffer += title_data["HV"] + ","
         buffer += title_data["Source"] + ","  # source
         buffer += title_data["Hole"] + ","  # hole num
         buffer += str(file_data["TMB Dump"][0] / DUMP_TIME) + ","
@@ -195,7 +197,8 @@ def generate_csv(files_data: list[dict]):
         buffer += file_data["Data files"] + ","
         buffer += file_data["Data plots"] + ","
         buffer += file_data["Start"][:-4] + ","  # Removing UTC unit
-        buffer += file_data["Stop"][:-4] + "\n"  # Removing UTC unit
+        buffer += file_data["Stop"][:-4] + ","  # Removing UTC unit
+        buffer += title_data["Events"] + "\n"
     return buffer
 
 
