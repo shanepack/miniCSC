@@ -189,7 +189,10 @@ def generate_csv(files_data: list[dict]):
         buffer += title_data["Run"] + ","  # run num
         buffer += title_data["Layers"] + ","
         buffer += title_data["HV"] + ","
-        buffer += title_data["Source"] + ","  # source
+        if title_data["Source"] == "Na-":
+            buffer += "NA,"
+        else:
+            buffer += title_data["Source"] + ","  # source
         buffer += title_data["Hole"] + ","  # hole num
         buffer += str(file_data["TMB Dump"][0] / DUMP_TIME) + ","
         buffer += str(file_data["TMB Dump"][20] / DUMP_TIME) + ","
