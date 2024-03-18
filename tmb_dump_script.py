@@ -68,11 +68,13 @@ def parse_txt(file_path: str):
         "Stop": "",
         "Data files": "",
         "Data plots": "",
+        "Pressure": "Not Measured",
+        "Temp": "Not Measured",
         "TMB Dump": [],
     }
     file = open(file_path, "r")
     lines = file.readlines()
-    tmb_start = 12
+    tmb_start = 1024
 
     # Parse lines
     for line in lines:
@@ -87,6 +89,10 @@ def parse_txt(file_path: str):
             data["Start"] = lines[lines.index(line) + 1].strip()
         elif "Stop" in line:
             data["Stop"] = lines[lines.index(line) + 1].strip()
+        elif "Pressure" in line:
+            data["Pressure"] = lines[lines.index(line) + 1].strip()
+        elif "Temp" in line:
+            data["Temp"] = lines[lines.index(line) + 1].strip()
         elif "Data files" in line:  # Generates urls to plots and raw files
             url = lines[lines.index(line) + 1].strip()
             tmp_data = url.split("/")
@@ -164,6 +170,8 @@ def generate_elog(files_data: list[dict]):
         #     buffer += f"{key}: {value}\n"
         buffer += "Start: " + file_data["Start"] + "\n"
         buffer += "Stop: " + file_data["Stop"] + "\n"
+        buffer += "Pressure: " + file_data["Pressure"] + " mbar\n"
+        buffer += "Temperature: " + file_data["Temp"] + " °C\n"
         buffer += "0ALCT: " + str(file_data["TMB Dump"][0] / DUMP_TIME) + " Hz\n"
         buffer += "20CLCT: " + str(file_data["TMB Dump"][20] / DUMP_TIME) + " Hz\n"
         buffer += "32TMB: " + str(file_data["TMB Dump"][32] / DUMP_TIME) + " Hz\n"
@@ -189,7 +197,10 @@ def generate_csv(files_data: list[dict]):
         buffer += title_data["Run"] + ","  # run num
         buffer += title_data["Layers"] + ","
         buffer += title_data["HV"] + ","
-        buffer += title_data["Source"] + ","  # source
+        if title_data["Source"] == "Na-":
+            buffer += "NA,"
+        else:
+            buffer += title_data["Source"] + ","  # source
         buffer += title_data["Hole"] + ","  # hole num
         buffer += str(file_data["TMB Dump"][0] / DUMP_TIME) + ","
         buffer += str(file_data["TMB Dump"][20] / DUMP_TIME) + ","
@@ -198,7 +209,10 @@ def generate_csv(files_data: list[dict]):
         buffer += file_data["Data plots"] + ","
         buffer += file_data["Start"][:-4] + ","  # Removing UTC unit
         buffer += file_data["Stop"][:-4] + ","  # Removing UTC unit
-        buffer += title_data["Events"] + "\n"
+        buffer += title_data["Events"] + ","
+        buffer += file_data["Pressure"] + ","
+        buffer += file_data["Temp"] + ","
+        buffer += "\n"
     return buffer
 
 
