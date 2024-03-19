@@ -90,9 +90,9 @@ def parse_txt(file_path: str):
         elif "Stop" in line:
             data["Stop"] = lines[lines.index(line) + 1].strip()
         elif "Pressure" in line:
-            data["Pressure"] = lines[lines.index(line) + 1].strip()
+            data["Pressure"] = lines[lines.index(line) + 1].strip() + " mbar"
         elif "Temp" in line:
-            data["Temp"] = lines[lines.index(line) + 1].strip()
+            data["Temp"] = lines[lines.index(line) + 1].strip() + " °C"
         elif "Data files" in line:  # Generates urls to plots and raw files
             url = lines[lines.index(line) + 1].strip()
             tmp_data = url.split("/")
@@ -102,7 +102,11 @@ def parse_txt(file_path: str):
                 tmp_data.remove("current")
                 tmp_data[0] = tmp_data[0][:-1]
                 tmp_data.insert(0, "http:/")
-                url = "/".join(tmp_data)
+            # Checking for weird other colon in first, second, or third slot
+            for i in range(3):
+                if "cern.ch:" in tmp_data[i]:
+                    tmp_data[i] = tmp_data[i].replace(":", "")
+            url = "/".join(tmp_data)
             data["Data files"] = url
             tmp_plots = url.split("/")
             tmp_plots.insert(4, "Tests_results")
@@ -160,7 +164,7 @@ def generate_elog(files_data: list[dict]):
             title += "(No Radiation Source)"
         else:
             title += f"({title_data['Source']} @ Hole #{title_data['Hole'][1:]})"
-        title += f" {title_data['Events']} Events"
+        title += f" {title_data['Events']} Events - {title_data['Run'].capitalize()}"
         if HTML:
             log("Inserting HTML styling")
             buffer += f'<pre>\n<strong><span style="font-size:large">{title}\n\n</span></strong>'
@@ -170,8 +174,8 @@ def generate_elog(files_data: list[dict]):
         #     buffer += f"{key}: {value}\n"
         buffer += "Start: " + file_data["Start"] + "\n"
         buffer += "Stop: " + file_data["Stop"] + "\n"
-        buffer += "Pressure: " + file_data["Pressure"] + " mbar\n"
-        buffer += "Temperature: " + file_data["Temp"] + " °C\n"
+        buffer += "Pressure: " + file_data["Pressure"] + "\n"
+        buffer += "Temperature: " + file_data["Temp"] + "\n"
         buffer += "0ALCT: " + str(file_data["TMB Dump"][0] / DUMP_TIME) + " Hz\n"
         buffer += "20CLCT: " + str(file_data["TMB Dump"][20] / DUMP_TIME) + " Hz\n"
         buffer += "32TMB: " + str(file_data["TMB Dump"][32] / DUMP_TIME) + " Hz\n"
