@@ -18,7 +18,15 @@ def log(*format: str):
         print()
 
 
-def parse_title(file_path: str):
+def parse_title(file_path: str) -> dict[str, str]:
+    """Parses information from the file title.
+
+    Args:
+        file_path (str): Path to file to parse title
+
+    Returns:
+        dict[str, str]: Data from file title in standard format
+    """
     head, tail = ntpath.split(file_path)
     file_title = tail or ntpath.basename(head)
     log("Parsing file title:", file_title)
@@ -28,7 +36,7 @@ def parse_title(file_path: str):
         "Chamber": title_split[1],
         "Layers": title_split[2],
         "Layer Pos": "",
-        "Hole": title_split[3],
+        "Hole": title_split[3][1:],
         "Source": "NA",
         "Test": title_split[5],
         "HV": title_split[6],
@@ -63,7 +71,16 @@ def parse_title(file_path: str):
     return data
 
 
-def parse_txt(file_path: str):
+def parse_txt(file_path: str) -> dict:
+    """Parses information from the file text body. Handles file opening and closing
+
+    Args:
+        file_path (str): Path to file to parse text body
+
+    Returns:
+        dict: Data from file title in standard format
+    """
+
     data = {
         "Start": "",
         "Stop": "",
@@ -91,9 +108,9 @@ def parse_txt(file_path: str):
         elif "Stop" in line:
             data["Stop"] = lines[lines.index(line) + 1].strip()
         elif "Pressure" in line:
-            data["Pressure"] = lines[lines.index(line) + 1].strip() + " mbar"
+            data["Pressure"] = lines[lines.index(line) + 1].strip()
         elif "Temp" in line:
-            data["Temp"] = lines[lines.index(line) + 1].strip() + " °C"
+            data["Temp"] = lines[lines.index(line) + 1].strip()
         elif "Data files" in line:  # Generates urls to plots and raw files
             url = lines[lines.index(line) + 1].strip()
             tmp_data = url.split("/")
@@ -144,7 +161,16 @@ def parse_txt(file_path: str):
 
 
 def parse_files(files: list[str]) -> list[dict]:
+    """Parses data from each file in input and outputs a standardized format.
+    Args:
+        files (list[str]): List of every file to parse
+
+    Returns:
+        list[dict]: List of parsed data for each file
+    """
+
     print(f"Extracting data from {len(files)} files.")
+    # Creates empty list of dictionaries for number of files
     data_list = [{"title_data": {}, "file_data": {}} for i in range(len(files))]
     i = 0
     for file in files:
@@ -154,11 +180,22 @@ def parse_files(files: list[str]) -> list[dict]:
     return data_list
 
 
-def get_run_num(file):
+def get_run_num(file: str) -> int:
+    """Acts as a key for sorting the directory by run number"""
     return int(file.split("-")[0][1:])
 
 
-def generate_elog(files_data: list[dict]):
+def generate_elog(files_data: list[dict]) -> str:
+    """Generates a buffer intended to be used as an Elog from each file in input.
+
+    Args:
+        files_data (list[dict]): List of the data parsed from each file
+
+    Returns:
+        str: Buffer containing csv output
+
+    """
+
     buffer = ""
     for data in files_data:
         title_data = data["title_data"]
@@ -176,13 +213,23 @@ def generate_elog(files_data: list[dict]):
             buffer += f"{title}\n"
         # for key, value in file_data.items():
         #     buffer += f"{key}: {value}\n"
-        buffer += "Start: " + file_data["Start"] + "\n"
-        buffer += "Stop: " + file_data["Stop"] + "\n"
-        buffer += "Pressure: " + file_data["Pressure"] + "\n"
-        buffer += "Temperature: " + file_data["Temp"] + "\n"
-        buffer += "0ALCT: " + str(file_data["TMB Dump"][0] / DUMP_TIME) + " Hz\n"
-        buffer += "20CLCT: " + str(file_data["TMB Dump"][20] / DUMP_TIME) + " Hz\n"
-        buffer += "32TMB: " + str(file_data["TMB Dump"][32] / DUMP_TIME) + " Hz\n"
+        buffer += f"Start: {file_data['Start']}\n"
+        buffer += f"Stop: {file_data['Stop']}\n"
+
+        # Checks that pressure was measured before adding units
+        if file_data["Pressure"] == "Not Measured":
+            buffer += f"Pressure: {file_data['Pressure']}\n"
+        else:
+            buffer += f"Pressure: {file_data['Pressure']} mbar\n"
+        # Checks that temperature was measured before adding units
+        if file_data["Temp"] == "Not Measured":
+            buffer += f"Temperature: {file_data['Temp']}\n"
+        else:
+            buffer += f"Temperature: {file_data['Temp']} °C\n"
+
+        buffer += f"0ALCT: {str(file_data['TMB Dump'][0] / DUMP_TIME)} Hz\n"
+        buffer += f"20CLCT: {str(file_data['TMB Dump'][20] / DUMP_TIME)} Hz\n"
+        buffer += f"32TMB: {str(file_data['TMB Dump'][32] / DUMP_TIME)} Hz\n"
         if HTML:
             buffer += f'<a href="{file_data["Data plots"]}">Link to plots</a>\n'
             buffer += (
@@ -190,64 +237,67 @@ def generate_elog(files_data: list[dict]):
             )
             buffer += "</pre>"
         else:
-            buffer += file_data["Data plots"] + "\n"
-            buffer += file_data["Data files"] + "\n"
+            buffer += f"{file_data['Data plots']}\n"
+            buffer += f"{file_data['Data files']}\n"
         buffer += "\n"
     # buffer += "</span></strong></pre>"
     return buffer
 
 
-def generate_csv(files_data: list[dict]):
+def generate_csv(files_data: list[dict]) -> str:
+    """Generates a csv output from each file in input.
+
+    Args:
+        files_data (list[dict]): List of the data parsed from each file
+
+    Returns:
+        str: Buffer containing csv output
+
+    """
+
     buffer = ""
     previous_layers = ""
     previous_voltage = ""
     for data in files_data:
         title_data = data["title_data"]
         file_data = data["file_data"]
-        buffer += title_data["Run"] + ","  # run num
+
+        buffer += f"{title_data['Run']},"  # run num
 
         # "Dashing out" values if they are the same as previous runs
+        layers = title_data["Layers"]
+        voltage = title_data["HV"]
         if REM_DUP:
-            if title_data["Layers"] != previous_layers:
-                buffer += title_data["Layers"]
+            if layers != previous_layers:
+                buffer += f"{layers},"
+                previous_layers = layers
             else:
-                buffer += '"'
-            buffer += ","
-            previous_layers = title_data["Layers"]
+                buffer += '",'
 
-            if title_data["HV"] != previous_voltage:
-                buffer += title_data["HV"][:-1]
+            if voltage != previous_voltage:
+                buffer += f"{voltage[:-1]},"
+                previous_voltage = title_data["HV"]
             else:
-                buffer += '"'
-            buffer += ","
-            previous_voltage = title_data["HV"]
+                buffer += '",'
         else:
-            buffer += title_data["Layers"] + ","
-            buffer += title_data["HV"] + ","
+            buffer += f"{layers},"
+            buffer += f"{voltage},"
 
         if title_data["Source"] == "Na-":
             buffer += "NA,"
         else:
-            buffer += title_data["Source"] + ","  # source
-        buffer += title_data["Hole"] + ","  # hole num
-        buffer += str(file_data["TMB Dump"][0] / DUMP_TIME) + ","
-        buffer += str(file_data["TMB Dump"][20] / DUMP_TIME) + ","
-        buffer += str(file_data["TMB Dump"][32] / DUMP_TIME) + ","
-        buffer += file_data["Data files"] + ","
-        buffer += file_data["Data plots"] + ","
-        buffer += file_data["Start"][:-4] + ","  # Removing UTC unit
-        buffer += file_data["Stop"][:-4] + ","  # Removing UTC unit
-        buffer += title_data["Events"] + ","
-        if "mbar" in file_data["Pressure"]:
-            buffer += file_data["Pressure"][:-5]
-        else:
-            buffer += file_data["Pressure"]
-        buffer += ","
-        if " °C" in file_data["Temp"]:
-            buffer += file_data["Temp"][:-3]
-        else:
-            buffer += file_data["Temp"]
-        buffer += ","
+            buffer += f"{title_data['Source']},"
+        buffer += f"{title_data['Hole']},"
+        buffer += f"{str(file_data['TMB Dump'][0] / DUMP_TIME)},"
+        buffer += f"{str(file_data['TMB Dump'][20] / DUMP_TIME)},"
+        buffer += f"{str(file_data['TMB Dump'][32] / DUMP_TIME)},"
+        buffer += f"{file_data['Data files']},"
+        buffer += f"{file_data['Data plots']},"
+        buffer += f"{file_data['Start'][:-4]},"  # Removes UTC unit
+        buffer += f"{file_data['Stop'][:-4]},"  # Removes UTC unit
+        buffer += f"{title_data['Events']},"
+        buffer += f"{file_data['Pressure']},"
+        buffer += f"{file_data['Temp']},"
         buffer += "\n"
     return buffer
 
@@ -283,7 +333,7 @@ def parse_directory(directory: str, num: int) -> list[str]:
 
 
 if __name__ == "__main__":
-    descr = "Reads a text file containing CSC run statistics and generates an Elog and csv for documentation.\n"
+    descr = "Reads a text file containing miniCSC run statistics and generates an Elog and csv for documentation.\n"
     parser = argparse.ArgumentParser(
         prog="TMB Parser Script",
         description=descr,
