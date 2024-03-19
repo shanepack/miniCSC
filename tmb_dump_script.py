@@ -75,7 +75,7 @@ def parse_txt(file_path: str):
     }
     file = open(file_path, "r")
     lines = file.readlines()
-    tmb_start = 1024
+    tmb_start = -1
 
     # Parse lines
     for line in lines:
@@ -120,7 +120,7 @@ def parse_txt(file_path: str):
         else:
             if "Counters" in line:
                 tmb_start = lines.index(line) + 2
-            if lines.index(line) < tmb_start:
+            if tmb_start == -1 or lines.index(line) < tmb_start:
                 continue
             try:
                 line_split = line.split()
@@ -137,6 +137,9 @@ def parse_txt(file_path: str):
                 continue
 
     file.close()
+    if tmb_start == -1:
+        print(f"Unable to find start of tmp in {file_path}")
+        exit(1)
     return data
 
 
@@ -235,8 +238,16 @@ def generate_csv(files_data: list[dict]):
         buffer += file_data["Start"][:-4] + ","  # Removing UTC unit
         buffer += file_data["Stop"][:-4] + ","  # Removing UTC unit
         buffer += title_data["Events"] + ","
-        buffer += file_data["Pressure"] + ","
-        buffer += file_data["Temp"] + ","
+        if "mbar" in file_data["Pressure"]:
+            buffer += file_data["Pressure"][:-5]
+        else:
+            buffer += file_data["Pressure"]
+        buffer += ","
+        if " °C" in file_data["Temp"]:
+            buffer += file_data["Temp"][:-3]
+        else:
+            buffer += file_data["Temp"]
+        buffer += ","
         buffer += "\n"
     return buffer
 
@@ -328,7 +339,7 @@ if __name__ == "__main__":
     # if ELOG:
     print("Generating Elog at: ", elog_out)
     elog_data = generate_elog(data)
-    elog_file = open(elog_out, "w")
+    elog_file = open(elog_out, "w", encoding="utf-8")
     elog_file.write(elog_data)
     elog_file.close()
 
@@ -336,6 +347,6 @@ if __name__ == "__main__":
     # if CSV:
     print("Generating CSV at: ", csv_out)
     csv_data = generate_csv(data)
-    csv_file = open(csv_out, "w")
+    csv_file = open(csv_out, "w", encoding="utf-8")
     csv_file.write(csv_data)
     csv_file.close()
