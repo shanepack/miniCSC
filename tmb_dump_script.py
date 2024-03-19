@@ -6,6 +6,7 @@ from pprint import pprint
 # Global Argument Flags
 VERBOSE = False
 HTML = False
+REM_DUP = False
 
 DUMP_TIME = 10  # seconds
 
@@ -195,12 +196,32 @@ def generate_elog(files_data: list[dict]):
 
 def generate_csv(files_data: list[dict]):
     buffer = ""
+    previous_layers = ""
+    previous_voltage = ""
     for data in files_data:
         title_data = data["title_data"]
         file_data = data["file_data"]
         buffer += title_data["Run"] + ","  # run num
-        buffer += title_data["Layers"] + ","
-        buffer += title_data["HV"] + ","
+
+        # "Dashing out" values if they are the same as previous runs
+        if REM_DUP:
+            if title_data["Layers"] != previous_layers:
+                buffer += title_data["Layers"]
+            else:
+                buffer += '"'
+            buffer += ","
+            previous_layers = title_data["Layers"]
+
+            if title_data["HV"] != previous_voltage:
+                buffer += title_data["HV"][:-1]
+            else:
+                buffer += '"'
+            buffer += ","
+            previous_voltage = title_data["HV"]
+        else:
+            buffer += title_data["Layers"] + ","
+            buffer += title_data["HV"] + ","
+
         if title_data["Source"] == "Na-":
             buffer += "NA,"
         else:
@@ -261,6 +282,12 @@ if __name__ == "__main__":
     #     "-e", "--elog", action="store_true", help="Generate ELOG output"
     # )
     parser.add_argument(
+        "-d",
+        "--remove-dup",
+        action="store_true",
+        help="Remove duplicate entries from the CSV output",
+    )
+    parser.add_argument(
         "-n",
         "--num",
         type=int,
@@ -279,6 +306,7 @@ if __name__ == "__main__":
 
     VERBOSE = args.verbose
     # ELOG = args.elog
+    REM_DUP = args.remove_dup
     HTML = args.html
     # CSV = args.csv
 
