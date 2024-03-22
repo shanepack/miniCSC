@@ -328,14 +328,14 @@ if __name__ == "__main__":
     # if ELOG:
     print("Generating Elog at: ", elog_out)
     elog_data = generate_elog(data)
-    elog_file = open(elog_out, "w")
-    elog_file.write(elog_data)
+    with open(elog_out, "w", encoding='utf-8') as elog_file:
+        elog_file.write(elog_data)
     elog_file.close()
 
     # Generate CSV
     # if CSV:
     print("Generating CSV at: ", csv_out)
     csv_data = generate_csv(data)
-    csv_file = open(csv_out, "w")
-    csv_file.write(csv_data)
+    with open(csv_out, "w", encoding='utf-8') as csv_file:
+        csv_file.write(csv_data)
     csv_file.close()
