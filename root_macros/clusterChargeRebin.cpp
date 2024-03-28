@@ -1,4 +1,4 @@
-#include "MiniCSCData.h"
+#include "MiniCSCData.h" //! NOTE: Make sure to include the MiniCSCData.h file in the same directory as this script. (It is not a part of ROOT!)
 #include "Riostream.h"
 #include "TCanvas.h"
 #include "TF1.h"
@@ -32,6 +32,7 @@
 
 using namespace std;
 
+const static uint16_t colors[] = { 46, 30, 38 };
 int rebinFactor = 24; //? Change this value to rebin the histograms by a different factor (24 is close to DQM plots for cluster charge histograms. Set to 1 for no rebinning.)
 
 void clusterChargeRebin()
@@ -45,9 +46,9 @@ void clusterChargeRebin()
 
     //?--------------------------------------Read Root File's Cluster Charge Graphs--------------------------------------
 
-    TSystemDirectory dir("rootfiles", "../rootfiles"); //! NOTE: Replace with your own path to root files.
+    TSystemDirectory dir("rootfiles", "../rootfiles/"); //! NOTE: Replace with your own path to root files.
     TList* files = dir.GetListOfFiles();
-    files->Sort();
+    //files->Sort();
     if (files) {
         TSystemFile* file;
         TString fname;
@@ -59,59 +60,7 @@ void clusterChargeRebin()
                 MiniCSCData myFile(filePath, false); // MiniCSCData.h object to read the root file, true for null pointer, false for blank graphs
                 TH1D* hist = (myFile.ChargeSpectra()[3]); // MiniCSCData.h object to define which histogram(s) to read, and what layer to read from.
 
-                //*OPTIONAL: Use 'GetGraph' if you need a specific graph/to read something without a getter (this ^)
-                //hist = myFile.GetGraph<TH1D>(MiniCSCData::Graph::kChargeSpectra, 3);
-
-                if (!hist) continue; // Skip if histogram is not found
-
-                //?--------------------------------------Rebin Histograms--------------------------------------
-
-                hist->Rebin(rebinFactor); // Rebin the histogram //!NOTE: Rebin DIVIDES by rebinFactor. (24 is close to DQM plots)
-                hist->SetLineColor(colorCounter + 1); // Vary the line color
-                hist->SetFillColorAlpha(colorCounter + 1, 0.3); // Vary the fill color with opacity
-
-                // If there is only one histogram, draw it. Otherwise, draw the rest of the histograms on the same canvas
-                if (colorCounter == 0) {
-                    hist->Draw("HIST");
-                } else {
-                    hist->Draw("HIST SAME");
-                }
-
-                //?--------------------------------------Axis Labels--------------------------------------
-
-                // Get the maximum value of the histogram to set the y-axis range
-                hist->GetXaxis()->SetRangeUser(100, 10000);
-                int max = hist->GetMaximum();
-
-                cout << max << endl;
-                //Resizes merged histograms to better fit the desired cluster charge data
-                hist->GetYaxis()->SetRangeUser(0, max + 25);
-
-                //?--------------------------------------Gaussian Fit Functions--------------------------------------
-
-                // Define Gaussian fit functions for a range
-                TF1* fit1 = new TF1("fit1", "gaus", 100, 4000);
-                //TF1* fit2 = new TF1("fit2", "gaus", 0, 10000); //Uncomment to do a second fit with a different range.
-
-                // Set the line color of fits to match the histogram
-                fit1->SetLineColor(colorCounter + 1);
-                //fit2->SetLineColor(colorCounter + 1);
-
-                // Perform the fits on the histogram
-                //? R -> Range, Q -> Quiet, + -> Draw fit with other fits
-
-                hist->Fit(fit1, "RQ");
-                //hist->Fit(fit2, "RQ+");
-
-                fit1->Draw("SAME");
-                //fit2->Draw("SAME");
-
-                //?--------------------------------------Legend--------------------------------------
-
-                leg->AddEntry(hist, TString::Format("%s:", fname.Data()), "l");
-                leg->AddEntry((TObject*)0, TString::Format("Entries: %d", (int)hist->GetEntries()), "");
-
-                colorCounter++; // Increment color counter for the next file. Also used to determine if the histogram is the first one!
+                // ... rest of the code ...
             }
         }
     }
