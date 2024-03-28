@@ -65,35 +65,40 @@ def parse_title(file_path: str):
 
 def parse_txt(file_path: str):
     data = {
-        "Start": "",
-        "Stop": "",
-        "Data files": "",
-        "Data plots": "",
-        "Pressure": "Not Measured",
+        "Start": "Not Measured",  # Default to "NA"
+        "Stop": "Not Measured",
+        "Data files": "NA",
+        "Data plots": "NA",
+        "Pressure": "Not Measured",  # You may want to keep this specific default
         "Temp": "Not Measured",
         "TMB Dump": [],
     }
-    file = open(file_path, "r")
-    lines = file.readlines()
-    tmb_start = 1024
-
-    # Parse lines
-    for line in lines:
-        # Check if line is empty
-        if len(line) < 2:
+    #file = open(file_path, "r")
+    #lines = file.readlines()
+    
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+        tmb_start = 1024
+    
+    for i, line in enumerate(lines):
+        # Skip empty or comment lines
+        if len(line) < 2 or line.startswith("#"):
             continue
-        # Comment checking
-        if line[0] == "#" or line[1] == "#":
-            continue
-        # Header data stuff
+        
         if "Start" in line:
-            data["Start"] = lines[lines.index(line) + 1].strip()
+            # Ensure there's a next line and it's valid
+            next_line = lines[i + 1].strip() if i + 1 < len(lines) else ""
+            data["Start"] = next_line if next_line else "Not Measured"
+            
         elif "Stop" in line:
-            data["Stop"] = lines[lines.index(line) + 1].strip()
+            # Ensure there's a next line and it's valid
+            next_line = lines[i + 1].strip() if i + 1 < len(lines) else ""
+            data["Stop"] = next_line if next_line else "Not Measured"
+            
         elif "Pressure" in line:
             data["Pressure"] = lines[lines.index(line) + 1].strip() + " mbar"
         elif "Temp" in line:
-            data["Temp"] = lines[lines.index(line) + 1].strip() + " °C"
+            data["Temp"] = lines[lines.index(line) + 1].strip() + " C"
         elif "Data files" in line:  # Generates urls to plots and raw files
             url = lines[lines.index(line) + 1].strip()
             tmp_data = url.split("/")
@@ -177,9 +182,10 @@ def generate_elog(files_data: list[dict]):
         buffer += "Stop: " + file_data["Stop"] + "\n"
         buffer += "Pressure: " + file_data["Pressure"] + "\n"
         buffer += "Temperature: " + file_data["Temp"] + "\n"
-        buffer += "0ALCT: " + str(file_data["TMB Dump"][0] / DUMP_TIME) + " Hz\n"
-        buffer += "20CLCT: " + str(file_data["TMB Dump"][20] / DUMP_TIME) + " Hz\n"
-        buffer += "32TMB: " + str(file_data["TMB Dump"][32] / DUMP_TIME) + " Hz\n"
+        tmb_dump = file_data["TMB Dump"]
+        buffer += "0ALCT: " + (str(tmb_dump[0] / DUMP_TIME) + " Hz" if len(tmb_dump) > 0 else "Not Measured") + "\n"
+        buffer += "20CLCT: " + (str(tmb_dump[20] / DUMP_TIME) + " Hz" if len(tmb_dump) > 20 else "Not Measured") + "\n"
+        buffer += "32TMB: " + (str(tmb_dump[32] / DUMP_TIME) + " Hz" if len(tmb_dump) > 32 else "Not Measured") + "\n"
         if HTML:
             buffer += f'<a href="{file_data["Data plots"]}">Link to plots</a>\n'
             buffer += (
@@ -203,7 +209,7 @@ def generate_csv(files_data: list[dict]):
         file_data = data["file_data"]
         buffer += title_data["Run"] + ","  # run num
 
-        # "Dashing out" values if they are the same as previous runs
+        # Handling duplicate values if required
         if REM_DUP:
             if title_data["Layers"] != previous_layers:
                 buffer += title_data["Layers"]
@@ -222,21 +228,22 @@ def generate_csv(files_data: list[dict]):
             buffer += title_data["Layers"] + ","
             buffer += title_data["HV"] + ","
 
-        if title_data["Source"] == "Na-":
-            buffer += "NA,"
-        else:
-            buffer += title_data["Source"] + ","  # source
-        buffer += title_data["Hole"] + ","  # hole num
-        buffer += str(file_data["TMB Dump"][0] / DUMP_TIME) + ","
-        buffer += str(file_data["TMB Dump"][20] / DUMP_TIME) + ","
-        buffer += str(file_data["TMB Dump"][32] / DUMP_TIME) + ","
-        buffer += file_data["Data files"] + ","
-        buffer += file_data["Data plots"] + ","
-        buffer += file_data["Start"][:-4] + ","  # Removing UTC unit
-        buffer += file_data["Stop"][:-4] + ","  # Removing UTC unit
+        buffer += "NA," if title_data["Source"] == "Na-" else title_data["Source"] + ","  # source
+        buffer += title_data["Hole"][1:] + ","  # hole num
+        
+        # Safely access TMB Dump values or use "NA"
+        tmb_dump = file_data["TMB Dump"]
+        buffer += (str(tmb_dump[0] / DUMP_TIME) + "," if len(tmb_dump) > 0 else "Not Measured,")
+        buffer += (str(tmb_dump[20] / DUMP_TIME) + "," if len(tmb_dump) > 20 else "Not Measured,")
+        buffer += (str(tmb_dump[32] / DUMP_TIME) + "," if len(tmb_dump) > 32 else "Not Measured,")
+
+        buffer += (file_data["Data files"] if file_data["Data files"] != "NA" else "NA") + ","
+        buffer += (file_data["Data plots"] if file_data["Data plots"] != "NA" else "NA") + ","
+        buffer += (file_data["Start"][:-4] + "," if file_data["Start"] != "Not Measured" else "Not Measured,")  # If time is not inputted, it will be "Not Measured"
+        buffer += (file_data["Stop"][:-4] + "," if file_data["Stop"] != "Not Measured" else "Not Measured,")  
         buffer += title_data["Events"] + ","
-        buffer += file_data["Pressure"] + ","
-        buffer += file_data["Temp"] + ","
+        buffer += file_data["Pressure"].replace(" mbar", "") + "," # Removing 'mbar' unit from csv output
+        buffer += file_data["Temp"].replace(" C", "") + "," # Removing ' C' unit from csv output
         buffer += "\n"
     return buffer
 
