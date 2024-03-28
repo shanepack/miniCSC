@@ -3,4 +3,4 @@
 
 cd ~
 . root-6.30.04-install/bin/thisroot.sh
-root ~/rootcode/miniCSC/plotVoltageVsTMBHz.cpp
+root ~/rootcode/miniCSC/clusterChargeRebin.cpp
