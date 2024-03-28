@@ -1,8 +1,17 @@
 #ifndef MINICSCDATA_H_
 #define MINICSCDATA_H_
 
+#ifdef __STDC_ALLOC_LIB__
+#define __STDC_WANT_LIB_EXT2__ 1
+#else
+#define _POSIX_C_SOURCE 200809L
+#endif
+
+#include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <string>
+#include <vector>
 
 #include "TFile.h"
 #include "TH1.h"
@@ -20,39 +29,55 @@ public:
         kFiredTBinAnode,
         kFiredWireGroup,
         kChargeSpectra,
-        kChargeTBin,
+        kChargeTBin, // TH1D
+        kChargeTBinWeighted, // TH1D
         kStripTBinADCVal,
         kStripOccupancy,
         kHalfStripOccupancy,
-        kFiredStrip,
+        kAveragePedestal,
+        kFirstPedestal, // TH1F
+        kFiredStrip, // TH1F
         kLAST // Just for array sizing
     };
     const unsigned short kNumLayers_ = 6;
 
     TFile* rootFile;
 
-    MiniCSCData(const char* rootFileName, bool nullableGraphs = true, bool vectStartZero = false)
+    MiniCSCData(const char* rootFilePath, bool nullableGraphs = true, bool vectStartZero = false)
         : nullableGraphs_(nullableGraphs)
         , vectStartZero_(vectStartZero)
     {
-        // Do we want to only work with std::string as well?
         // Allow other open options?
-        rootFile = new TFile(rootFileName, "READ");
+        rootFile = new TFile(rootFilePath, "READ");
+        // Getting the file name from path
+        std::stringstream path(rootFilePath);
+        std::string segment;
+        std::vector<std::string> seglist;
 
-        wireOccupancy_ = GetGraphs<TH1D>(Graph::kWireOccupancy);
-        simulAnodeHit_ = GetGraphs<TH2F>(Graph::kSimulAnodeHit);
+        while (std::getline(path, segment, '/')) {
+            seglist.push_back(segment);
+        }
+        // NOTE: It appears root will free this at some point, when I tried to do it manually
+        //       the interpreter complained about duplicate freeing.
+        rootFileName_ = strdup(seglist.back().c_str());
+
+        wireOccupancy_  = GetGraphs<TH1D>(Graph::kWireOccupancy);
+        simulAnodeHit_  = GetGraphs<TH2F>(Graph::kSimulAnodeHit);
         firedTBinAnode_ = GetGraphs<TH2F>(Graph::kFiredTBinAnode);
         firedWireGroup_ = GetGraph<TH1I>(Graph::kFiredWireGroup);
 
-        chargeSpectra_ = GetGraphs<TH1D>(Graph::kChargeSpectra);
-        chargeTBin_ = GetGraphs<TH1D>(Graph::kChargeTBin);
-        stripTBinADCVal_ = GetGraphs<TH2F>(Graph::kStripTBinADCVal);
-        stripOccupancy_ = GetGraphs<TH1D>(Graph::kStripOccupancy);
+        chargeSpectra_      = GetGraphs<TH1D>(Graph::kChargeSpectra);
+        chargeTBin_         = GetGraphs<TH1D>(Graph::kChargeTBin);
+        chargeTBinWeighted_ = GetGraphs<TH1D>(Graph::kChargeTBinWeighted);
+        stripTBinADCVal_    = GetGraphs<TH2F>(Graph::kStripTBinADCVal);
+        stripOccupancy_     = GetGraphs<TH1D>(Graph::kStripOccupancy);
         halfStripOccupancy_ = GetGraphs<TH1D>(Graph::kHalfStripOccupancy);
-        firedStrip_ = GetGraph<TH1I>(Graph::kFiredStrip);
+        avgPedestal_        = GetGraphs<TH1F>(Graph::kAveragePedestal);
+        fstPedestal_        = GetGraphs<TH1F>(Graph::kFirstPedestal);
+        firedStrip_         = GetGraph<TH1I>(Graph::kFiredStrip);
     }
 
-    // ~MiniCSCData() { rootFile->Close(); }
+    // ~MiniCSCData() { std::free(rootFileName_); }
 
     // Anode Getters ===========================================================
 
@@ -65,15 +90,19 @@ public:
 
     std::vector<TH1D*> ChargeSpectra() const { return chargeSpectra_; }
     std::vector<TH1D*> ChargeTBin() const { return chargeTBin_; }
+    std::vector<TH1D*> ChargeTBinWeighted() const { return chargeTBinWeighted_; }
     std::vector<TH2F*> StripTBinADCVal() const { return stripTBinADCVal_; }
     std::vector<TH1D*> StripOccupancy() const { return stripOccupancy_; }
     std::vector<TH1D*> HalfStripOccupancy() const { return halfStripOccupancy_; }
+    std::vector<TH1F*> AveragePedestal() const { return avgPedestal_; }
+    std::vector<TH1F*> FirstPedestal() const { return fstPedestal_; }
     TH1I* FiredStrip() const { return firedStrip_; }
 
     // Generic Getters =========================================================
 
     const bool NullableGraphs() const { return nullableGraphs_; }
     const bool VectStartZero() const { return vectStartZero_; }
+    const char* RootFileName() const { return rootFileName_; }
 
     template <typename T>
     T* GetGraph(const char* graphName) const { return getGraphObject<T>(graphName); }
@@ -104,6 +133,7 @@ public:
 
 private:
     const static unsigned short kInvalidLayer_ = 0;
+    char* rootFileName_;
     bool nullableGraphs_;
     bool vectStartZero_;
 
@@ -116,9 +146,12 @@ private:
     // Cathode plots
     std::vector<TH1D*> chargeSpectra_;
     std::vector<TH1D*> chargeTBin_;
+    std::vector<TH1D*> chargeTBinWeighted_;
     std::vector<TH2F*> stripTBinADCVal_;
     std::vector<TH1D*> stripOccupancy_;
     std::vector<TH1D*> halfStripOccupancy_;
+    std::vector<TH1F*> avgPedestal_;
+    std::vector<TH1F*> fstPedestal_;
     TH1I* firedStrip_;
 
     const std::string graphPaths_[static_cast<int>(Graph::kLAST)] = {
@@ -128,9 +161,12 @@ private:
         "/Anode/firedWireGroup",
         "/Cathode/charge/chargeL",
         "/Cathode/chargeTBin/chargeTBinL",
+        "Cathode/chargeTBinWeighted/chargeTBinWeightedL",
         "/Cathode/stripTBinADCVal/stripTBinADCValL",
         "/Cathode/strip/stripL",
         "/Cathode/halfStrip/halfStripL",
+        "/Cathode/avgPedestal/avgPedestalL",
+        "/Cathode/fstPedestal/fstPedestalL",
         "/Cathode/firedStrip"
     };
 
