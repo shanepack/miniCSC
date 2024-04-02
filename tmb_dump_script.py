@@ -18,7 +18,15 @@ def log(*format: str):
         print()
 
 
-def parse_title(file_path: str):
+def parse_title(file_path: str) -> dict[str, str]:
+    """Parses information from the file title.
+
+    Args:
+        file_path (str): Path to file to parse title
+
+    Returns:
+        dict[str, str]: Data from file title in standard format
+    """
     head, tail = ntpath.split(file_path)
     file_title = tail or ntpath.basename(head)
     log("Parsing file title:", file_title)
@@ -28,7 +36,7 @@ def parse_title(file_path: str):
         "Chamber": title_split[1],
         "Layers": title_split[2],
         "Layer Pos": "",
-        "Hole": title_split[3],
+        "Hole": title_split[3][1:],
         "Source": "NA",
         "Test": title_split[5],
         "HV": title_split[6],
@@ -63,7 +71,16 @@ def parse_title(file_path: str):
     return data
 
 
-def parse_txt(file_path: str):
+def parse_txt(file_path: str) -> dict:
+    """Parses information from the file text body. Handles file opening and closing
+
+    Args:
+        file_path (str): Path to file to parse text body
+
+    Returns:
+        dict: Data from file title in standard format
+    """
+
     data = {
         "Start": "Not Measured",  # Default to "NA"
         "Stop": "Not Measured",
@@ -73,6 +90,7 @@ def parse_txt(file_path: str):
         "Temp": "Not Measured",
         "TMB Dump": [],
     }
+
     #file = open(file_path, "r")
     #lines = file.readlines()
     
@@ -96,7 +114,7 @@ def parse_txt(file_path: str):
             data["Stop"] = next_line if next_line else "Not Measured"
             
         elif "Pressure" in line:
-            data["Pressure"] = lines[lines.index(line) + 1].strip() + " mbar"
+            data["Pressure"] = lines[lines.index(line) + 1].strip()
         elif "Temp" in line:
             data["Temp"] = lines[lines.index(line) + 1].strip() + " C"
         elif "Data files" in line:  # Generates urls to plots and raw files
@@ -125,7 +143,7 @@ def parse_txt(file_path: str):
         else:
             if "Counters" in line:
                 tmb_start = lines.index(line) + 2
-            if lines.index(line) < tmb_start:
+            if tmb_start == -1 or lines.index(line) < tmb_start:
                 continue
             try:
                 line_split = line.split()
@@ -142,11 +160,23 @@ def parse_txt(file_path: str):
                 continue
 
     file.close()
+    if tmb_start == -1:
+        print(f"Unable to find start of tmp in {file_path}")
+        exit(1)
     return data
 
 
 def parse_files(files: list[str]) -> list[dict]:
+    """Parses data from each file in input and outputs a standardized format.
+    Args:
+        files (list[str]): List of every file to parse
+
+    Returns:
+        list[dict]: List of parsed data for each file
+    """
+
     print(f"Extracting data from {len(files)} files.")
+    # Creates empty list of dictionaries for number of files
     data_list = [{"title_data": {}, "file_data": {}} for i in range(len(files))]
     i = 0
     for file in files:
@@ -156,11 +186,22 @@ def parse_files(files: list[str]) -> list[dict]:
     return data_list
 
 
-def get_run_num(file):
+def get_run_num(file: str) -> int:
+    """Acts as a key for sorting the directory by run number"""
     return int(file.split("-")[0][1:])
 
 
-def generate_elog(files_data: list[dict]):
+def generate_elog(files_data: list[dict]) -> str:
+    """Generates a buffer intended to be used as an Elog from each file in input.
+
+    Args:
+        files_data (list[dict]): List of the data parsed from each file
+
+    Returns:
+        str: Buffer containing csv output
+
+    """
+
     buffer = ""
     for data in files_data:
         title_data = data["title_data"]
@@ -193,40 +234,49 @@ def generate_elog(files_data: list[dict]):
             )
             buffer += "</pre>"
         else:
-            buffer += file_data["Data plots"] + "\n"
-            buffer += file_data["Data files"] + "\n"
+            buffer += f"{file_data['Data plots']}\n"
+            buffer += f"{file_data['Data files']}\n"
         buffer += "\n"
     # buffer += "</span></strong></pre>"
     return buffer
 
 
-def generate_csv(files_data: list[dict]):
+def generate_csv(files_data: list[dict]) -> str:
+    """Generates a csv output from each file in input.
+
+    Args:
+        files_data (list[dict]): List of the data parsed from each file
+
+    Returns:
+        str: Buffer containing csv output
+
+    """
+
     buffer = ""
     previous_layers = ""
     previous_voltage = ""
     for data in files_data:
         title_data = data["title_data"]
         file_data = data["file_data"]
-        buffer += title_data["Run"] + ","  # run num
+
+        buffer += f"{title_data['Run']},"  # run num
 
         # Handling duplicate values if required
         if REM_DUP:
-            if title_data["Layers"] != previous_layers:
-                buffer += title_data["Layers"]
+            if layers != previous_layers:
+                buffer += f"{layers},"
+                previous_layers = layers
             else:
-                buffer += '"'
-            buffer += ","
-            previous_layers = title_data["Layers"]
+                buffer += '",'
 
-            if title_data["HV"] != previous_voltage:
-                buffer += title_data["HV"][:-1]
+            if voltage != previous_voltage:
+                buffer += f"{voltage[:-1]},"
+                previous_voltage = title_data["HV"]
             else:
-                buffer += '"'
-            buffer += ","
-            previous_voltage = title_data["HV"]
+                buffer += '",'
         else:
-            buffer += title_data["Layers"] + ","
-            buffer += title_data["HV"] + ","
+            buffer += f"{layers},"
+            buffer += f"{voltage},"
 
         buffer += "NA," if title_data["Source"] == "Na-" else title_data["Source"] + ","  # source
         buffer += title_data["Hole"][1:] + ","  # hole num
@@ -279,7 +329,7 @@ def parse_directory(directory: str, num: int) -> list[str]:
 
 
 if __name__ == "__main__":
-    descr = "Reads a text file containing CSC run statistics and generates an Elog and csv for documentation.\n"
+    descr = "Reads a text file containing miniCSC run statistics and generates an Elog and csv for documentation.\n"
     parser = argparse.ArgumentParser(
         prog="TMB Parser Script",
         description=descr,
