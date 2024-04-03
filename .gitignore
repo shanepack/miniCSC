@@ -2,14 +2,16 @@
 *.o
 *.so
 *.pcm
+*.sh
 .vscode/
+.clang-format
 
 # CERN data files
 *.root
 *.txt
 *.png
-*.sh
 *.pdf
 .clang-format
+
 
 output

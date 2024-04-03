@@ -1,4 +1,3 @@
-#include "MiniCSCData.h"
 #include "Riostream.h"
 #include "TCanvas.h"
 #include "TF1.h"
@@ -21,7 +20,7 @@
 #include <math.h>
 #include <vector>
 
-//? Shane Pack - 28-3-2024
+#include "MiniCSCData.h" // MiniCSCData.h object to read the root file, true for null pointer, false for blank graphs
 
 //?================================================================================================================================================================
 //? 1. The clusterChargeRebin function reads all root files in a defined directory and extracts the cluster charge histograms from them.
@@ -36,6 +35,9 @@ int rebinFactor = 24; //? Change this value to rebin the histograms by a differe
 
 void clusterChargeRebin()
 {
+    // Automatically compiles utils library in case it changed.
+    gSystem->CompileMacro("MiniCSCUtils.cpp");
+
     // Disable stats
     gStyle->SetOptStat(0);
 
@@ -45,7 +47,7 @@ void clusterChargeRebin()
 
     //?--------------------------------------Read Root File's Cluster Charge Graphs--------------------------------------
 
-    TSystemDirectory dir("rootfiles", "../rootfiles"); //! NOTE: Replace with your own path to root files.
+    TSystemDirectory dir("rootfiles", "../../rootfiles"); //! NOTE: Replace with your own path to root files.
     TList* files = dir.GetListOfFiles();
     files->Sort();
     if (files) {
@@ -55,12 +57,12 @@ void clusterChargeRebin()
         while ((file = (TSystemFile*)next())) {
             fname = file->GetName();
             if (!file->IsDirectory() && fname.EndsWith(".root")) {
-                TString filePath = TString::Format("../rootfiles/%s", fname.Data()); //! NOTE: Replace with your own path to root files.
+                TString filePath = TString::Format("../../rootfiles/%s", fname.Data()); //! NOTE: Replace with your own path to root files.
                 MiniCSCData myFile(filePath, false); // MiniCSCData.h object to read the root file, true for null pointer, false for blank graphs
                 TH1D* hist = (myFile.ChargeSpectra()[3]); // MiniCSCData.h object to define which histogram(s) to read, and what layer to read from.
 
                 //*OPTIONAL: Use 'GetGraph' if you need a specific graph/to read something without a getter (this ^)
-                //hist = myFile.GetGraph<TH1D>(MiniCSCData::Graph::kChargeSpectra, 3);
+                // hist = myFile.GetGraph<TH1D>(MiniCSCData::Graph::kChargeSpectra, 3);
 
                 if (!hist) continue; // Skip if histogram is not found
 
@@ -84,27 +86,27 @@ void clusterChargeRebin()
                 int max = hist->GetMaximum();
 
                 cout << max << endl;
-                //Resizes merged histograms to better fit the desired cluster charge data
+                // Resizes merged histograms to better fit the desired cluster charge data
                 hist->GetYaxis()->SetRangeUser(0, max + 25);
 
                 //?--------------------------------------Gaussian Fit Functions--------------------------------------
 
                 // Define Gaussian fit functions for a range
                 TF1* fit1 = new TF1("fit1", "gaus", 100, 4000);
-                //TF1* fit2 = new TF1("fit2", "gaus", 0, 10000); //Uncomment to do a second fit with a different range.
+                // TF1* fit2 = new TF1("fit2", "gaus", 0, 10000); //Uncomment to do a second fit with a different range.
 
                 // Set the line color of fits to match the histogram
                 fit1->SetLineColor(colorCounter + 1);
-                //fit2->SetLineColor(colorCounter + 1);
+                // fit2->SetLineColor(colorCounter + 1);
 
                 // Perform the fits on the histogram
                 //? R -> Range, Q -> Quiet, + -> Draw fit with other fits
 
                 hist->Fit(fit1, "RQ");
-                //hist->Fit(fit2, "RQ+");
+                // hist->Fit(fit2, "RQ+");
 
                 fit1->Draw("SAME");
-                //fit2->Draw("SAME");
+                // fit2->Draw("SAME");
 
                 //?--------------------------------------Legend--------------------------------------
 
@@ -118,8 +120,8 @@ void clusterChargeRebin()
 
     leg->Draw();
     canvas->Draw();
-    canvas->SaveAs("../outputs/clusterCharge.pdf"); //!NOTE: Change to your designated path to save PDF files.
+    canvas->SaveAs("../../outputs/clusterCharge.pdf"); //! NOTE: Change to your designated path to save PDF files.
     canvas->Close(); // Close the canvas after saving the file
 }
 
-//TODO: Parse through each charge histogram in the root file and generate histograms for each of them. (Bins < 50 will not be displayed)
+// TODO: Parse through each charge histogram in the root file and generate histograms for each of them. (Bins < 50 will not be displayed)
