@@ -11,4 +11,5 @@ UseTab: Never
 AlignConsecutiveAssignments: "Consecutive"
 AlignConsecutiveDeclarations: "None"
 AlignOperands: "Align"
-ColumnLimit: 100
+AlignTrailingComments: true
+ColumnLimit: 120

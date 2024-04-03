@@ -33,7 +33,7 @@ void mData()
 
     uint16_t colorCounter = 0;
 
-    std::string subDir = "./pipe-depth-test/";
+    std::string subDir = "../pipe-depth-test/";
     TSystemDirectory dir("pipe-depth-test", subDir.c_str());
     TList* files = dir.GetListOfFiles();
     files->Sort();
@@ -63,15 +63,13 @@ void mData()
         TH1D* hist = m.ChargeTBinWeighted()[3];
         chgWght.hist.push_back(hist);
         chgWght.legend->AddEntry(hist, TString::Format("%s:", m.RootFileName()), "l");
-        chgWght.legend->AddEntry(
-            (TObject*)0, TString::Format("Entries: %d", (int)hist->GetEntries()), "");
+        chgWght.legend->AddEntry((TObject*)0, TString::Format("Entries: %d", (int)hist->GetEntries()), "");
 
         hist = m.ChargeTBin()[3];
         hist->SetTitle("Strip Time Bin Occupancy");
         chgTBin.hist.push_back(hist);
         chgTBin.legend->AddEntry(hist, TString::Format("%s:", m.RootFileName()), "l");
-        chgTBin.legend->AddEntry(
-            (TObject*)0, TString::Format("Entries: %d", (int)hist->GetEntries()), "");
+        chgTBin.legend->AddEntry((TObject*)0, TString::Format("Entries: %d", (int)hist->GetEntries()), "");
 
         hist = m.ChargeSpectra()[3];
         hist->Rebin(32);
@@ -79,8 +77,7 @@ void mData()
         hist->SetTitle("Charge Spectra");
         chgSpct.hist.push_back(hist);
         chgSpct.legend->AddEntry(hist, TString::Format("%s:", m.RootFileName()), "l");
-        chgSpct.legend->AddEntry(
-            (TObject*)0, TString::Format("Entries: %d", (int)hist->GetEntries()), "");
+        chgSpct.legend->AddEntry((TObject*)0, TString::Format("Entries: %d", (int)hist->GetEntries()), "");
     }
     MUtils::drawStack<TH1D>(cc, chgWght, "gaus");
     // MUtils::drawStack(cc, chgWght, "gaus");
@@ -91,6 +88,8 @@ void mData()
 
     MUtils::drawStack<TH1D>(cc, chgSpct, "gaus");
     cc->Print(pdf);
+
+    mDataVect[0].ChargeTBinProfile()->Draw();
 
     cc->Print(pdf1);
 }

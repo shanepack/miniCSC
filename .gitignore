@@ -10,5 +10,6 @@
 *.png
 *.sh
 *.pdf
+.clang-format
 
 output
