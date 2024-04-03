@@ -36,7 +36,7 @@ public:
         kAveragePedestal,    // TH1F, multi-layer, (WIP) average pedestal value for each ADC
         kFirstPedestal,      // TH1F, multi-layer, first sampled pedestal value
         kFiredStrip,         // TH1F, all-layers, how many strips fire per event
-        kchargeTBinProfile,  // TProfile, all-layers, better representation of Graph::kChargeTBin,
+        kChargeTBinProfile,  // TProfile, all-layers, better representation of Graph::kChargeTBin,
                              // shows time bin firing occupancy for all strips and layers
         kLAST                // Just for array sizing, no members should be placed after this
     };
