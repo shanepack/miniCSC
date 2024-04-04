@@ -33,7 +33,7 @@ There are a LOT of possibilities (and libraries) associated with ROOT, these are
   so we highly recommend following [our step-by-step setup guide available on the 'CSCProto@904' TWiki page.](https://twiki.cern.ch/twiki/bin/view/CMS/DAQminiCSC)
 
   > [!TIP]
-  >  _If you're unfamiliar with Linux terminal commands, it's recommended to refer to this [cheat sheet](https://www.guru99.com/linux-commands-cheat-sheet.html)!_
+  >  _If you're unfamiliar with Linux terminal commands, it's recommended to refer to this [cheat sheet]([https://www.guru99.com/linux-commands-cheat-sheet.html](https://github.com/santosh373/Linux-Basics/blob/master/linux%20cheat%20sheet.pdf))!_
 
 ## Data Logging:
 
