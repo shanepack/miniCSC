@@ -29,8 +29,8 @@ There are a LOT of possibilities (and libraries) associated with ROOT, these are
 
 ## LXPLUS Access & Data Aquisition:
 
-  Accessing LXPLUS and getting setup to properly perform DAQ and retrieve data from tests ran on the miniCSCs can be a bit tricky, 
-  so we highly reccommend following [our step-by-step setup guide available on the 'CSCProto@904' TWiki page.](https://twiki.cern.ch/twiki/bin/view/CMS/DAQminiCSC)
+  Accessing LXPLUS and getting setup to properly perform DAQ and retrieve data from tests run on the miniCSCs can be a bit tricky, 
+  so we highly recommend following [our step-by-step setup guide available on the 'CSCProto@904' TWiki page.](https://twiki.cern.ch/twiki/bin/view/CMS/DAQminiCSC)
 
   > [!TIP]
   >  _If you're unfamiliar with Linux terminal commands, it's recommended to refer to this [cheat sheet](https://www.guru99.com/linux-commands-cheat-sheet.html)!_
@@ -41,10 +41,10 @@ There are a LOT of possibilities (and libraries) associated with ROOT, these are
 
   **If you're interested in adding test data to/creating your own spreadsheet, use our [TMB Dump Python Script](https://github.com/shanepack/miniCSC/blob/main/tmb_dump_script.py) which is capable of generating:**
   
-  - Plain text for analysis _([Example]())_ <!-- TODO: Add example .txt somewhere lol -->
-  - HTML formatted text for eLog posts _([Example]())_ <!-- TODO: Add example .txt somewhere lol -->
-  - .csv formatted text for pasting into spreadsheets _([Example]())_ <!-- TODO: Add example .txt somewhere lol -->
+  - Plain text for analysis _([Example](https://twiki.cern.ch/twiki/pub/CMS/MiniCSCLogScript/elog_out.txt))_ 
+  - HTML formatted text for eLog posts _([Example](https://twiki.cern.ch/twiki/pub/CMS/MiniCSCLogScript/HTML_EXAMPLE_elog_out.txt))_ 
+  - .csv formatted text for pasting into spreadsheets _([Example](https://twiki.cern.ch/twiki/pub/CMS/MiniCSCLogScript/csv_out.txt))_ 
 
   > [!IMPORTANT]
-  > **_Our TWiki post on how to use the script can be found [here.]()_** <!-- Make TWiki for TMB_DUMP_SCRIPT.PY-->
+  > **_Our TWiki post on how to use the script can be found [here.](https://twiki.cern.ch/twiki/bin/view/CMS/MiniCSCLogScript)_** 
   
