@@ -15,7 +15,7 @@ template <typename T> void MUtils::drawStack(TCanvas* cc, const histInfo<T>& his
         hist->SetFillColorAlpha(color, 0.4);
         hist->SetLineWidth(1);
         uint64_t max = hist->GetMaximum();
-        hist->GetYaxis()->SetRangeUser(0, max * 1.3);
+        hist->GetYaxis()->SetRangeUser(0, max * 1.4);
         if (!i)
             hist->Draw("HIST");
         else
@@ -26,7 +26,7 @@ template <typename T> void MUtils::drawStack(TCanvas* cc, const histInfo<T>& his
         if (strncmp(fitOpt, "", 1) != 0) {
             double minx = hist->GetXaxis()->GetXmin();
             double maxx = hist->GetXaxis()->GetXmax();
-            TF1* fit = new TF1("fit", "gaus", minx - 1, maxx + 1);
+            TF1* fit    = new TF1("fit", "gaus", minx - 1, maxx + 1);
             fit->SetLineColor(color);
             fit->SetLineWidth(3);
             hist->Fit(fit, "RQ");
