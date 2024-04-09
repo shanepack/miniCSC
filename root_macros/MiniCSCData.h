@@ -1,3 +1,6 @@
+// Some implementation notes:
+//     Any public methods and fields should use `const char *` to keep compatibility with root. Private methods can use
+//     std::string if desired.
 #ifndef MINICSCDATA_H_
 #define MINICSCDATA_H_
 
@@ -12,7 +15,12 @@
 #include "TH2.h"
 #include "TProfile.h"
 
-/// @class MiniCSCData contains graph utilities for root files output by the MiniCSC CMSSW plugin
+/// @class MiniCSCData contains graph utilities for root files output by the MiniCSC CMSSW plugin.
+/// It does not do any data treatment, it is simply providing a common interface so that the EDM plugin can continue
+/// development and change without breaking existing root macros. If you change the EDM plugin root output file you will
+/// have to update this class to handle that change.
+/// TODO: Figure out seg fault when running macros twice. I am not doing any real memory managment since root handles a
+/// lot but obviously I am missing something.
 class MiniCSCData
 {
 public:
@@ -53,12 +61,18 @@ public:
     ///                       If false, not found graphs will be empty
     /// @param vectStartZero If true, graph getter vectors will start at zero, so to get a graph for a layer you would
     ///                      need to use layer - 1. If false, graph vectors will start at 1, aligning with miniCSC
-    MiniCSCData(const char* rootFilePath, bool nullableGraphs = true, bool vectStartZero = false)
+    MiniCSCData(const char* rootFilePath, bool nullableGraphs = true, bool vectStartZero = true)
         : nullableGraphs_(nullableGraphs)
         , vectStartZero_(vectStartZero)
     {
         // Allow other open options?
         rootFile_ = new TFile(rootFilePath, "READ");
+
+        if (rootFile_->IsZombie()) {
+            std::cerr << "Root file " << rootFilePath
+                      << " was not opened properly. Please check that the file exists. Exiting program.\n";
+            std::exit(2);
+        }
 
         // Getting the file name from path for future utilities
         std::stringstream path(rootFilePath);
@@ -145,7 +159,8 @@ public:
     /// Get Graph by name and optionally for one layer
     /// @tparam T type of graph to find
     /// @param name name of graph to find
-    /// @param layer MiniCSC layer that the graph represents
+    /// @param layer MiniCSC layer that the graph represents. If note specified, assumes that the graph only has one
+    /// layer
     /// @return pointer to graph object
     template <typename T> T* GetGraph(Graph name, uint16_t layer = kInvalidLayer_) const
     {
@@ -159,7 +174,12 @@ public:
     template <typename T> std::vector<T*> GetGraphs(Graph name) const
     {
         std::vector<T*> vect;
-        vect.push_back(nullptr);
+        // size_t i = 0;
+        if (!vectStartZero_) {
+            vect.push_back(nullptr);
+            // i = 1;
+        }
+
         for (size_t i = 1; i < kNumLayers_ + 1; i++) {
             vect.push_back(GetGraph<T>(name, i));
         }
@@ -168,14 +188,17 @@ public:
 
     // Generic Setters ========================================================
 
-    /// Set if unlocated graphs return nullptr or empty graph
-    void SetNullableGraphs(bool value) { nullableGraphs_ = value; }
+    // NOTE: These getters did basically nothing since they did not change the instance fields. Should probably make it
+    // get all the graphs again.
+    //
+    /// Set if unlocated graphs return nullptr or empty graph.
+    // void SetNullableGraphs(bool value) { nullableGraphs_ = value; }
     /// Set if graph vectors start at zero when indexing layers
-    void SetVectStartZero(bool value) { vectStartZero_ = value; }
+    // void SetVectStartZero(bool value) { vectStartZero_ = value; }
 
 private:
     /// Value used to check for default layer numbers
-    const static uint16_t kInvalidLayer_ = 65535;
+    const static uint16_t kInvalidLayer_ = 0;
     char* rootFileName_;
     bool nullableGraphs_;
     bool vectStartZero_;
@@ -200,7 +223,7 @@ private:
 
     /// Array containing root file paths for each graph. Index in MiniCSCData::Graph should be the same as desired path
     /// in this array
-    const std::array<std::string, static_cast<int>(Graph::kLAST)> graphPaths_
+    const std::string graphPaths_[static_cast<int>(Graph::kLAST)]
         = { "/Anode/wire/wireL", "/Anode/simulAnodeHit/simulAnodeHitL", "/Anode/firedTBinAnode/firedTBinAnodeL",
               "/Anode/firedWireGroup", "/Cathode/charge/chargeL", "/Cathode/chargeTBin/chargeTBinL",
               "Cathode/chargeTBinWeighted/chargeTBinWeightedL", "/Cathode/stripTBinADCVal/stripTBinADCValL",
