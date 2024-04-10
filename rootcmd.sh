@@ -4,4 +4,4 @@
 cd ~
 . root-6.30.04-install/bin/thisroot.sh
 cd ~/rootcode/miniCSC/root_macros
-root clusterChargeRebin.cpp
+root clusterChargeRebinWithUtils.cpp

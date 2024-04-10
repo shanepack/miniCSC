@@ -79,20 +79,22 @@ void clusterChargeRebin()
                     hist->Draw("HIST SAME");
                 }
 
+                cout << "Drawing histogram for: " << fname << endl;
+
                 //?--------------------------------------Axis Labels--------------------------------------
 
                 // Get the maximum value of the histogram to set the y-axis range
-                hist->GetXaxis()->SetRangeUser(100, 10000);
+                hist->GetXaxis()->SetRangeUser(100, 5000);
                 int max = hist->GetMaximum();
 
                 cout << max << endl;
                 // Resizes merged histograms to better fit the desired cluster charge data
-                hist->GetYaxis()->SetRangeUser(0, max + 25);
+                hist->GetYaxis()->SetRangeUser(0, max + 100);
 
                 //?--------------------------------------Gaussian Fit Functions--------------------------------------
 
                 // Define Gaussian fit functions for a range
-                TF1* fit1 = new TF1("fit1", "gaus", 100, 4000);
+                TF1* fit1 = new TF1("fit1", "gaus", 100, 6000);
                 // TF1* fit2 = new TF1("fit2", "gaus", 0, 10000); //Uncomment to do a second fit with a different range.
 
                 // Set the line color of fits to match the histogram
