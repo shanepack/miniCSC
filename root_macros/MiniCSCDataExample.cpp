@@ -83,6 +83,6 @@ void MiniCSCDataExample()
     // We can also get the graph using it's MiniCSCData::Graph name. These graph names are meant to be a more human
     // readable version of graph ids or something similar. Each enum member is documented in MiniCSCData.h and depending
     // on your editor of choice, hovering over the name should show you the comment for quick reference.
-    TProfile* chargeTBin = data.GetGraph<TProfile>(MiniCSCData::Graph::kchargeTBinProfile);
+    TProfile* chargeTBin = data.GetGraph<TProfile>(MiniCSCData::Graph::kChargeTBinProfile);
     // chargeTBin->Draw();
 }
