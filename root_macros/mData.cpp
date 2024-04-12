@@ -21,19 +21,20 @@ const static char* pdf1 = "graphs.pdf]";
 
 void mData()
 {
-    // gSystem->Load("MiniCSCUtils_cpp.so");
+    gSystem->Load("MiniCSCUtils_cpp.so");
     // Automatically compiles utils library in case it changed.
-    gSystem->CompileMacro("MiniCSCUtils.cpp");
+    // gSystem->CompileMacro("MiniCSCUtils.cpp");
     gStyle->SetOptStat(0);
 
     TCanvas* cc = new TCanvas();
     cc->SetRightMargin(0.1);
     cc->SetLeftMargin(0.12);
     std::vector<MiniCSCData> mDataVect;
+    cc->Clear();
 
     uint16_t colorCounter = 0;
 
-    std::string subDir = "./pipe-depth-test/";
+    std::string subDir = "./input/";
     TSystemDirectory dir("pipe-depth-test", subDir.c_str());
     TList* files = dir.GetListOfFiles();
     files->Sort();
@@ -50,47 +51,47 @@ void mData()
         if (file->IsDirectory() || !fname.EndsWith(".root")) continue;
 
         TString filePath = TString::Format((subDir + "%s").c_str(), fname.Data());
-        mDataVect.push_back(MiniCSCData(filePath.Data()));
+        std::cout << filePath.Data() << std::endl;
+        mDataVect.push_back(MiniCSCData(filePath.Data(), true, true));
     }
 
-    MUtils::histInfo<TH1D> chgWght;
-    MUtils::histInfo<TH1D> chgTBin;
+    float max     = 0.0f;
+    MiniCSCData m = mDataVect[0];
+
     MUtils::histInfo<TH1D> chgSpct;
-    chgWght.legend = new TLegend(0.8, 0.75, 0.9, 0.9);
-    chgTBin.legend = new TLegend(0.8, 0.75, 0.9, 0.9);
     chgSpct.legend = new TLegend(0.75, 0.75, 0.9, 0.9);
-    for (MiniCSCData& m : mDataVect) {
-        TH1D* hist = m.ChargeTBinWeighted()[3];
-        chgWght.hist.push_back(hist);
-        chgWght.legend->AddEntry(hist, TString::Format("%s:", m.RootFileName()), "l");
-        chgWght.legend->AddEntry(
-            (TObject*)0, TString::Format("Entries: %d", (int)hist->GetEntries()), "");
+    TH1D* hist     = m.ChargeSpectra()[2];
+    hist->Rebin(32);
+    hist->GetXaxis()->SetRangeUser(0.5, 4000.5);
+    hist->SetTitle("Charge Spectra");
+    chgSpct.hist.push_back(hist);
+    chgSpct.legend->AddEntry(hist, TString::Format("%s:", m.RootFileName()), "l");
+    chgSpct.legend->AddEntry((TObject*)0, TString::Format("Entries: %d", (int)hist->GetEntries()), "");
 
-        hist = m.ChargeTBin()[3];
-        hist->SetTitle("Strip Time Bin Occupancy");
-        chgTBin.hist.push_back(hist);
-        chgTBin.legend->AddEntry(hist, TString::Format("%s:", m.RootFileName()), "l");
-        chgTBin.legend->AddEntry(
-            (TObject*)0, TString::Format("Entries: %d", (int)hist->GetEntries()), "");
+    MiniCSCData m2 = mDataVect[1];
+    hist           = m2.ChargeSpectra()[2];
+    // hist           = m2.GetGraph<TH1D>("chargesL3");
+    hist->Rebin(32);
+    hist->GetXaxis()->SetRangeUser(0.5, 4000.5);
+    hist->SetTitle("Charge Spectra");
+    chgSpct.hist.push_back(hist);
+    chgSpct.legend->AddEntry(hist, TString::Format("%s:", m2.RootFileName()), "l");
+    chgSpct.legend->AddEntry((TObject*)0, TString::Format("Entries: %d", (int)hist->GetEntries()), "");
 
-        hist = m.ChargeSpectra()[3];
-        hist->Rebin(32);
-        hist->GetXaxis()->SetRangeUser(100, 4000.5);
-        hist->SetTitle("Charge Spectra");
-        chgSpct.hist.push_back(hist);
-        chgSpct.legend->AddEntry(hist, TString::Format("%s:", m.RootFileName()), "l");
-        chgSpct.legend->AddEntry(
-            (TObject*)0, TString::Format("Entries: %d", (int)hist->GetEntries()), "");
-    }
-    MUtils::drawStack<TH1D>(cc, chgWght, "gaus");
-    // MUtils::drawStack(cc, chgWght, "gaus");
+    MiniCSCData m3 = mDataVect[2];
+    hist           = m3.ChargeSpectra()[2];
+    // hist           = m2.GetGraph<TH1D>("chargesL3");
+    hist->Rebin(32);
+    hist->GetXaxis()->SetRangeUser(0.5, 4000.5);
+    hist->SetTitle("Charge Spectra");
+    chgSpct.hist.push_back(hist);
+    chgSpct.legend->AddEntry(hist, TString::Format("%s:", m3.RootFileName()), "l");
+    chgSpct.legend->AddEntry((TObject*)0, TString::Format("Entries: %d", (int)hist->GetEntries()), "");
+
+    MUtils::drawStack<TH1D>(cc, chgSpct);
     cc->Print(pdf);
 
-    MUtils::drawStack<TH1D>(cc, chgTBin, "gaus");
-    cc->Print(pdf);
-
-    MUtils::drawStack<TH1D>(cc, chgSpct, "gaus");
-    cc->Print(pdf);
+    // mDataVect[0].ChargeTBinProfile()->Draw();
 
     cc->Print(pdf1);
 }
