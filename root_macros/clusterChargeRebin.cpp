@@ -58,13 +58,20 @@ void clusterChargeRebin()
             fname = file->GetName();
             if (!file->IsDirectory() && fname.EndsWith(".root")) {
                 TString filePath = TString::Format("../../rootfiles/%s", fname.Data()); //! NOTE: Replace with your own path to root files.
-                MiniCSCData myFile(filePath, false); // MiniCSCData.h object to read the root file, true for null pointer, false for blank graphs
-                TH1D* hist = (myFile.ChargeSpectra()[3]); // MiniCSCData.h object to define which histogram(s) to read, and what layer to read from.
+
+                // MiniCSCData.h object to read the root file, true for null pointer, false for blank graphs
+                MiniCSCData myFile(filePath, false);
+
+                // MiniCSCData.h object to define which histogram(s) to read, and what layer to read from.
+                //!(miniCSCs uses [3] and/or [4] ONLY!)
+                TH1D* hist = (myFile.ChargeSpectra()[3]);
 
                 //*OPTIONAL: Use 'GetGraph' if you need a specific graph/to read something without a getter (this ^)
-                // hist = myFile.GetGraph<TH1D>(MiniCSCData::Graph::kChargeSpectra, 3);
+                //*OPTIONAL: hist = myFile.GetGraph<TH1D>(MiniCSCData::Graph::kChargeSpectra, 3);
 
                 if (!hist) continue; // Skip if histogram is not found
+
+                hist->SetTitle("Cluster Charge Spectra"); //!NOTE: Change the title of the histogram here.
 
                 //?--------------------------------------Rebin Histograms--------------------------------------
 
@@ -78,37 +85,16 @@ void clusterChargeRebin()
                 } else {
                     hist->Draw("HIST SAME");
                 }
-
                 cout << "Drawing histogram for: " << fname << endl;
 
                 //?--------------------------------------Axis Labels--------------------------------------
 
                 // Get the maximum value of the histogram to set the y-axis range
-                hist->GetXaxis()->SetRangeUser(100, 5000);
+                hist->GetXaxis()->SetRangeUser(0, 5000);
                 int max = hist->GetMaximum();
 
-                cout << max << endl;
                 // Resizes merged histograms to better fit the desired cluster charge data
                 hist->GetYaxis()->SetRangeUser(0, max + 100);
-
-                //?--------------------------------------Gaussian Fit Functions--------------------------------------
-
-                // Define Gaussian fit functions for a range
-                TF1* fit1 = new TF1("fit1", "gaus", 100, 6000);
-                // TF1* fit2 = new TF1("fit2", "gaus", 0, 10000); //Uncomment to do a second fit with a different range.
-
-                // Set the line color of fits to match the histogram
-                fit1->SetLineColor(colorCounter + 1);
-                // fit2->SetLineColor(colorCounter + 1);
-
-                // Perform the fits on the histogram
-                //? R -> Range, Q -> Quiet, + -> Draw fit with other fits
-
-                hist->Fit(fit1, "RQ");
-                // hist->Fit(fit2, "RQ+");
-
-                fit1->Draw("SAME");
-                // fit2->Draw("SAME");
 
                 //?--------------------------------------Legend--------------------------------------
 
