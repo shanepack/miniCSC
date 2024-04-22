@@ -1,23 +1,13 @@
-#include "Riostream.h"
 #include "TCanvas.h"
-#include "TF1.h"
-#include "TFile.h"
 #include "TH1.h"
-#include "TH2F.h"
 #include "TLegend.h"
-#include "TMath.h"
 #include "TStyle.h"
 #include <THStack.h>
 #include <TKey.h>
 #include <TList.h>
-#include <TMatrixTSym.h>
-#include <TROOT.h>
-#include <TSystem.h>
 #include <TSystemDirectory.h>
 #include <TSystemFile.h>
-#include <cmath>
 #include <iostream>
-#include <math.h>
 #include <vector>
 
 #include "MiniCSCData.h" // MiniCSCData.h object to read the root file, true for null pointer, false for blank graphs
@@ -31,23 +21,28 @@
 
 using namespace std;
 
-int rebinFactor = 24; //? Change this value to rebin the histograms by a different factor (24 is close to DQM plots for cluster charge histograms. Set to 1 for no rebinning.)
+//Change this value to rebin the histograms by a different factor (32 is close to DQM plots)
+//! Set to 1 to disable rebinning.
+int rebinFactor = 32;
 
 void clusterChargeRebin()
 {
-    // Automatically compiles utils library in case it changed.
-    gSystem->CompileMacro("MiniCSCUtils.cpp");
-
-    // Disable stats
+    // Disable default stats
     gStyle->SetOptStat(0);
 
     TCanvas* canvas = new TCanvas("canvas", "Histogram Comparison", 800, 600);
     auto leg = new TLegend(0.7, 0.7, 0.9, 0.9);
-    int colorCounter = 0; // Counter to vary histogram/gaussian fit colors
+
+    // Counter to vary histogram colors.
+    //You can also choose your own colors by using a vector of pre-defined color values.
+    int colorCounter = 0;
+    // Used to store the maximum value of the histograms for the y-axis range.
+    int prevMax = 0;
 
     //?--------------------------------------Read Root File's Cluster Charge Graphs--------------------------------------
 
-    TSystemDirectory dir("rootfiles", "../../rootfiles"); //! NOTE: Replace with your own path to root files.
+    //! NOTE: Replace with your own path to root files.
+    TSystemDirectory dir("rootfiles", "../../rootfiles");
     TList* files = dir.GetListOfFiles();
     files->Sort();
     if (files) {
@@ -57,25 +52,31 @@ void clusterChargeRebin()
         while ((file = (TSystemFile*)next())) {
             fname = file->GetName();
             if (!file->IsDirectory() && fname.EndsWith(".root")) {
-                TString filePath = TString::Format("../../rootfiles/%s", fname.Data()); //! NOTE: Replace with your own path to root files.
 
-                // MiniCSCData.h object to read the root file, true for null pointer, false for blank graphs
-                MiniCSCData myFile(filePath, false);
+                //! NOTE: Replace with your own path to root files.
+                TString filePath = TString::Format("../../rootfiles/%s", fname.Data());
+
+                // MiniCSCData.h object to read the root file.
+                // 1st False for blank histograms (Change to true for null pointer if histogram is not found.)
+                // 2nd True for vectStartZero to start the layer number at 0 (Used in hist definition below.)
+                MiniCSCData myFile(filePath, false, true);
 
                 // MiniCSCData.h object to define which histogram(s) to read, and what layer to read from.
-                //!(miniCSCs uses [3] and/or [4] ONLY!)
-                TH1D* hist = (myFile.ChargeSpectra()[3]);
+                // If MiniCSCData's vectStartZero is enabled, the layer number is 1 less than the layer you want to read.
+                TH1D* hist = (myFile.ChargeSpectra()[2]);
 
                 //*OPTIONAL: Use 'GetGraph' if you need a specific graph/to read something without a getter (this ^)
                 //*OPTIONAL: hist = myFile.GetGraph<TH1D>(MiniCSCData::Graph::kChargeSpectra, 3);
 
                 if (!hist) continue; // Skip if histogram is not found
 
-                hist->SetTitle("Cluster Charge Spectra"); //!NOTE: Change the title of the histogram here.
+                //!NOTE: Change the title of the histogram here.
+                hist->SetTitle("Dark Rate: Premix, PD = 65 vs. Dynamic, PD = 66");
 
                 //?--------------------------------------Rebin Histograms--------------------------------------
 
-                hist->Rebin(rebinFactor); // Rebin the histogram //!NOTE: Rebin DIVIDES by rebinFactor. (24 is close to DQM plots)
+                //!NOTE: Rebin DIVIDES by rebinFactor. (32 is close to DQM plots)
+                hist->Rebin(rebinFactor); // Rebin the histogram
                 hist->SetLineColor(colorCounter + 1); // Vary the line color
                 hist->SetFillColorAlpha(colorCounter + 1, 0.3); // Vary the fill color with opacity
 
@@ -89,27 +90,43 @@ void clusterChargeRebin()
 
                 //?--------------------------------------Axis Labels--------------------------------------
 
-                // Get the maximum value of the histogram to set the y-axis range
-                hist->GetXaxis()->SetRangeUser(0, 5000);
-                int max = hist->GetMaximum();
+                // Set the x-axis min and max. (Cluster charge spectra should start at 0.5)
+                //? (Use '.5' to align the bin index with the center of the bin.)
+                hist->GetXaxis()->SetRangeUser(0.5, 3000.5);
 
-                // Resizes merged histograms to better fit the desired cluster charge data
-                hist->GetYaxis()->SetRangeUser(0, max + 100);
+                // Get the highest bin value between all histograms for the y-axis range.
+                int max = hist->GetMaximum();
+                if (max > prevMax) {
+                    prevMax = max;
+                }
+
+                //! **Y-Axis Range is set after all histograms are processed.**
 
                 //?--------------------------------------Legend--------------------------------------
 
+                // Add legend entries based off the file name and number of entries each histogram
                 leg->AddEntry(hist, TString::Format("%s:", fname.Data()), "l");
                 leg->AddEntry((TObject*)0, TString::Format("Entries: %d", (int)hist->GetEntries()), "");
 
-                colorCounter++; // Increment color counter for the next file. Also used to determine if the histogram is the first one!
+                // Increment color counter for the next file. Also used to determine if the histogram is the first one!
+                colorCounter++;
             }
         }
     }
+
+    //?--------------------------------------Y-Axis Sizing--------------------------------------
+
+    // Set the y-axis range of entire canvas using prevMax, adjusting it up by 20%
+    if (colorCounter > 0) { // Check if any histograms were found
+        ((TH1*)canvas->GetListOfPrimitives()->First())->GetYaxis()->SetRangeUser(0, prevMax * 1.2);
+    } else {
+        cout << "No histograms found. Check your .root files/directories." << endl;
+    }
+
+    //?--------------------------------------Drawing & Saving--------------------------------------
 
     leg->Draw();
     canvas->Draw();
     canvas->SaveAs("../../outputs/clusterCharge.pdf"); //! NOTE: Change to your designated path to save PDF files.
     canvas->Close(); // Close the canvas after saving the file
 }
-
-// TODO: Parse through each charge histogram in the root file and generate histograms for each of them. (Bins < 50 will not be displayed)
