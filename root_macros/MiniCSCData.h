@@ -1,6 +1,20 @@
-// Some implementation notes:
-//     Any public methods and fields should use `const char *` to keep compatibility with root. Private methods can use
-//     std::string if desired.
+// -*- C++ -*-
+//
+// Class:      MiniCSCData
+//
+/**\class MiniCSCData MiniCSCData.h
+
+ Description: Analyzes Unpacked MiniCSC Digis
+
+ Implementation:
+     Any public methods and fields should use `const char *` to keep compatibility with root. Private methods can use
+     std::string if desired.
+     I'm not sure vectors is the best method of data storage. On one hand it allows us to keep real layer numbers and
+     vector indecies mostly the same. However, it prevents the use of iterators since there are null or empty graphs.
+*/
+//
+// Original Author:  Dylan Parks
+//
 #ifndef MINICSCDATA_H_
 #define MINICSCDATA_H_
 
@@ -19,8 +33,6 @@
 /// It does not do any data treatment, it is simply providing a common interface so that the EDM plugin can continue
 /// development and change without breaking existing root macros. If you change the EDM plugin root output file you will
 /// have to update this class to handle that change.
-/// TODO: Figure out seg fault when running macros twice. I am not doing any real memory managment since root handles a
-/// lot but obviously I am missing something.
 class MiniCSCData
 {
 public:
@@ -154,8 +166,7 @@ public:
     /// @tparam T type of graph to find
     /// @param graphName full path within the root file pointing to the graph
     /// @return pointer to graph object
-    template <typename T>
-    T* GetGraph(const char* graphName) const { return getGraphObject<T>(graphName); }
+    template <typename T> T* GetGraph(const char* graphName) const { return getGraphObject<T>(graphName); }
 
     /// Get Graph by name and optionally for one layer
     /// @tparam T type of graph to find
@@ -163,8 +174,7 @@ public:
     /// @param layer MiniCSC layer that the graph represents. If note specified, assumes that the graph only has one
     /// layer
     /// @return pointer to graph object
-    template <typename T>
-    T* GetGraph(Graph name, uint16_t layer = kInvalidLayer_) const
+    template <typename T> T* GetGraph(Graph name, uint16_t layer = kInvalidLayer_) const
     {
         return getGraphObject<T>(getGraphFullPath(name, layer));
     }
@@ -173,8 +183,7 @@ public:
     /// @tparam T type of graph to find
     /// @param name name of graph to find
     /// @return vector of pointers to graphs for each layer
-    template <typename T>
-    std::vector<T*> GetGraphs(Graph name) const
+    template <typename T> std::vector<T*> GetGraphs(Graph name) const
     {
         std::vector<T*> vect;
         // size_t i = 0;
@@ -243,8 +252,7 @@ private:
     }
 
     /// Gets TObject or Graph from rootFile
-    template <typename T>
-    T* getGraphObject(std::string path) const
+    template <typename T> T* getGraphObject(std::string path) const
     {
         T* hist = nullptr;
         rootFile_->GetObject(path.c_str(), hist);

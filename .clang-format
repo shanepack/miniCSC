@@ -8,7 +8,4 @@ KeepEmptyLinesAtTheStartOfBlocks: true
 Language: Cpp
 TabWidth: 4
 UseTab: Never
-AlignConsecutiveAssignments: false
-AlignConsecutiveDeclarations: false
-AlignOperands: false
-#ColumnLimit: 300
+ColumnLimit: 120
