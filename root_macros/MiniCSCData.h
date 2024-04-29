@@ -185,11 +185,14 @@ public:
     /// @return vector of pointers to graphs for each layer
     template <typename T> std::vector<T*> GetGraphs(Graph name) const
     {
+        // Return an empty vector if the graph is single layer only
+        if (std::string(graphPaths_[static_cast<int>(name)]).back() != 'L') {
+            std::cout << "Error: Graph is not a multi-layer graph" << std::endl;
+            return std::vector<T*>();
+        }
         std::vector<T*> vect;
-        // size_t i = 0;
         if (!vectStartZero_) {
             vect.push_back(nullptr);
-            // i = 1;
         }
 
         for (size_t i = 1; i < kNumLayers_ + 1; i++) {
