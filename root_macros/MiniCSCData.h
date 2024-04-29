@@ -28,25 +28,25 @@ public:
     /// If you want to add a graph just add it to the enum (ideally at the end) and update
     /// MiniCSCData::graphPaths_ with the path within the root file
     enum class Graph {
-        kWireOccupancy,      // TH1D, multi-layer, wirgroup occupancy for a layer
-        kSimulAnodeHit,      // TH2F, multi-layer, (WIP) simultanious anode hits for a layer
-        kFiredTBinAnode,     // TH2F, multi-layer, (WIP) which time bin each wiregroup tends to
-                             // fire
-        kFiredWireGroup,     // TH1I, all-layers, how many wiregroups fire per event
-        kChargeSpectra,      // TH1D, multi-layer, charge spectra on all strips per layer
-        kChargeTBin,         // TH1D, multi-layer, (DEPRECIATED) Shows time bin firing occupancy for all
-                             // strips
+        kWireOccupancy, // TH1D, multi-layer, wirgroup occupancy for a layer
+        kSimulAnodeHit, // TH2F, multi-layer, (WIP) simultanious anode hits for a layer
+        kFiredTBinAnode, // TH2F, multi-layer, (WIP) which time bin each wiregroup tends to
+        // fire
+        kFiredWireGroup, // TH1I, all-layers, how many wiregroups fire per event
+        kChargeSpectra, // TH1D, multi-layer, charge spectra on all strips per layer
+        kChargeTBin, // TH1D, multi-layer, (DEPRECIATED) Shows time bin firing occupancy for all
+        // strips
         kChargeTBinWeighted, // TH1D, multi-layer, (DEPRECIATED) Same as Graph::kChargeTBin however
-                             // each bin is weighted with the accumulated charge
-        kStripTBinADCVal,    // TH2F, multi-layer, time bin firing occupancy per strip
-        kStripOccupancy,     // TH1D, multi-layer, strip occupancy (ADC>13) for a layer
+        // each bin is weighted with the accumulated charge
+        kStripTBinADCVal, // TH2F, multi-layer, time bin firing occupancy per strip
+        kStripOccupancy, // TH1D, multi-layer, strip occupancy (ADC>13) for a layer
         kHalfStripOccupancy, // TH1D, multi-layer, half-strip occupancy for a layer
-        kAveragePedestal,    // TH1F, multi-layer, (WIP) average pedestal value for each ADC
-        kFirstPedestal,      // TH1F, multi-layer, first sampled pedestal value
-        kFiredStrip,         // TH1F, all-layers, how many strips fire per event
-        kchargeTBinProfile,  // TProfile, all-layers, better representation of Graph::kChargeTBin,
-                             // shows time bin firing occupancy for all strips and layers
-        kLAST                // Just for array sizing, no members should be placed after this
+        kAveragePedestal, // TH1F, multi-layer, (WIP) average pedestal value for each ADC
+        kFirstPedestal, // TH1F, multi-layer, first sampled pedestal value
+        kFiredStrip, // TH1F, all-layers, how many strips fire per event
+        kChargeTBinProfile, // TProfile, all-layers, better representation of Graph::kChargeTBin,
+        // shows time bin firing occupancy for all strips and layers
+        kLAST // Just for array sizing, no members should be placed after this
     };
 
     /// Number of layers in a miniCSC, should be 6 unless something very bad happened
@@ -87,22 +87,22 @@ public:
         rootFileName_ = strdup(seglist.back().c_str());
 
         // Getting anode graphs
-        wireOccupancy_  = GetGraphs<TH1D>(Graph::kWireOccupancy);
-        simulAnodeHit_  = GetGraphs<TH2F>(Graph::kSimulAnodeHit);
+        wireOccupancy_ = GetGraphs<TH1D>(Graph::kWireOccupancy);
+        simulAnodeHit_ = GetGraphs<TH2F>(Graph::kSimulAnodeHit);
         firedTBinAnode_ = GetGraphs<TH2F>(Graph::kFiredTBinAnode);
         firedWireGroup_ = GetGraph<TH1I>(Graph::kFiredWireGroup);
 
         // Getting cathode graphs
-        chargeSpectra_      = GetGraphs<TH1D>(Graph::kChargeSpectra);
-        chargeTBin_         = GetGraphs<TH1D>(Graph::kChargeTBin);
+        chargeSpectra_ = GetGraphs<TH1D>(Graph::kChargeSpectra);
+        chargeTBin_ = GetGraphs<TH1D>(Graph::kChargeTBin);
         chargeTBinWeighted_ = GetGraphs<TH1D>(Graph::kChargeTBinWeighted);
-        stripTBinADCVal_    = GetGraphs<TH2F>(Graph::kStripTBinADCVal);
-        stripOccupancy_     = GetGraphs<TH1D>(Graph::kStripOccupancy);
+        stripTBinADCVal_ = GetGraphs<TH2F>(Graph::kStripTBinADCVal);
+        stripOccupancy_ = GetGraphs<TH1D>(Graph::kStripOccupancy);
         halfStripOccupancy_ = GetGraphs<TH1D>(Graph::kHalfStripOccupancy);
-        avgPedestal_        = GetGraphs<TH1F>(Graph::kAveragePedestal);
-        fstPedestal_        = GetGraphs<TH1F>(Graph::kFirstPedestal);
-        firedStrip_         = GetGraph<TH1I>(Graph::kFiredStrip);
-        chargeTBinProfile_  = GetGraph<TProfile>(Graph::kchargeTBinProfile);
+        avgPedestal_ = GetGraphs<TH1F>(Graph::kAveragePedestal);
+        fstPedestal_ = GetGraphs<TH1F>(Graph::kFirstPedestal);
+        firedStrip_ = GetGraph<TH1I>(Graph::kFiredStrip);
+        chargeTBinProfile_ = GetGraph<TProfile>(Graph::kChargeTBinProfile);
     }
 
     // ~MiniCSCData() { std::free(rootFileName_); }
@@ -154,7 +154,8 @@ public:
     /// @tparam T type of graph to find
     /// @param graphName full path within the root file pointing to the graph
     /// @return pointer to graph object
-    template <typename T> T* GetGraph(const char* graphName) const { return getGraphObject<T>(graphName); }
+    template <typename T>
+    T* GetGraph(const char* graphName) const { return getGraphObject<T>(graphName); }
 
     /// Get Graph by name and optionally for one layer
     /// @tparam T type of graph to find
@@ -162,7 +163,8 @@ public:
     /// @param layer MiniCSC layer that the graph represents. If note specified, assumes that the graph only has one
     /// layer
     /// @return pointer to graph object
-    template <typename T> T* GetGraph(Graph name, uint16_t layer = kInvalidLayer_) const
+    template <typename T>
+    T* GetGraph(Graph name, uint16_t layer = kInvalidLayer_) const
     {
         return getGraphObject<T>(getGraphFullPath(name, layer));
     }
@@ -171,7 +173,8 @@ public:
     /// @tparam T type of graph to find
     /// @param name name of graph to find
     /// @return vector of pointers to graphs for each layer
-    template <typename T> std::vector<T*> GetGraphs(Graph name) const
+    template <typename T>
+    std::vector<T*> GetGraphs(Graph name) const
     {
         std::vector<T*> vect;
         // size_t i = 0;
@@ -235,12 +238,13 @@ private:
     inline std::string getGraphFullPath(Graph name, unsigned short layer = kInvalidLayer_) const
     {
         return (layer == kInvalidLayer_ || layer > kNumLayers_)
-                   ? graphPaths_[static_cast<int>(name)]
-                   : graphPaths_[static_cast<int>(name)] + std::to_string(layer);
+            ? graphPaths_[static_cast<int>(name)]
+            : graphPaths_[static_cast<int>(name)] + std::to_string(layer);
     }
 
     /// Gets TObject or Graph from rootFile
-    template <typename T> T* getGraphObject(std::string path) const
+    template <typename T>
+    T* getGraphObject(std::string path) const
     {
         T* hist = nullptr;
         rootFile_->GetObject(path.c_str(), hist);
