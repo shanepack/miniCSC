@@ -62,7 +62,7 @@ void mData()
     chgSpct.legend = new TLegend(0.75, 0.75, 0.9, 0.9);
     TH1D* hist     = m.ChargeSpectra()[2];
     hist->Rebin(32);
-    hist->GetXaxis()->SetRangeUser(0.5, 4000.5);
+    hist->GetXaxis()->SetRangeUser(100.5, 4000.5);
     hist->SetTitle("Charge Spectra");
     chgSpct.hist.push_back(hist);
     chgSpct.legend->AddEntry(hist, TString::Format("%s:", m.RootFileName()), "l");

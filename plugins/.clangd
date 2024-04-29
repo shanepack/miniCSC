@@ -1,0 +1,6 @@
+# Diagnostics:
+#   Suppress: '*'
+CompileFlags:
+  Add:
+  - "isystem/home/dylan/lxplus-includes"
+  - "-I/home/dylan/lxplus-includes"
