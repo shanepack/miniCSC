@@ -52,7 +52,7 @@ There are a lot of possibilities (and libraries) associated with ROOT, these are
 
 ## Data Logging:
 
-  Data from every test we performed on the miniCSC's are available in [this spreadsheet](https://docs.google.com/spreadsheets/d/1zSMEwGt_I1K-cLdwoXqq-PGu8aNxlSe0PZry_535MEk/edit?usp=sharing).
+  Data from every test we performed on the miniCSCs are available in [this spreadsheet](https://docs.google.com/spreadsheets/d/1zSMEwGt_I1K-cLdwoXqq-PGu8aNxlSe0PZry_535MEk/edit?usp=sharing).
 
   **If you're interested in adding test data to/creating your own spreadsheet, use our [TMB Dump Python Script](https://github.com/shanepack/miniCSC/blob/main/tmb_dump_script.py) which is capable of generating:**
   
