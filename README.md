@@ -1,5 +1,5 @@
 # miniCSC - ROOT, Scripts & Help
-Cataloged work on the miniCSC project by Shane Pack & Dylan Parks. 
+Cataloged work on the CSC Prototype (miniCSC) project at CERN by Shane Pack & Dylan Parks.
 
 ## Getting ROOT Installed Locally:
 
@@ -7,7 +7,7 @@ Cataloged work on the miniCSC project by Shane Pack & Dylan Parks.
 
 * **Windows 10/11**:
   
-    You can [install ROOT as an executable on Windows](https://root.cern/install/all_releases/), but it is recommended to use WSL.
+    You can [install ROOT as an executable on Windows](https://root.cern/install/all_releases/), but it is recommended to use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
 
     - [YouTube Tutorial on ROOT with WSL Setup by 'Physics Matters'](https://youtu.be/pmfM4Zq6OQU?si=UIo0tsXVN-lnjHhA)
 
@@ -46,5 +46,5 @@ There are a LOT of possibilities (and libraries) associated with ROOT, these are
   - .csv formatted text for pasting into spreadsheets _([Example](https://twiki.cern.ch/twiki/pub/CMS/MiniCSCLogScript/csv_out.txt))_ 
 
   > [!IMPORTANT]
-  > **_Our TWiki post on how to use the script can be found [here.](https://twiki.cern.ch/twiki/bin/view/CMS/MiniCSCLogScript)_** 
+  > **_Our TWiki post on how to use the script can be found [here.](https://twiki.cern.ch/twiki/bin/view/CMS/MiniCSCLogScript)_**
   
