@@ -1,7 +1,20 @@
 # miniCSC - ROOT, Scripts & Help
-Cataloged work on the CSC Prototype (miniCSC) project at CERN by Shane Pack & Dylan Parks.
+Cataloged work for use by future researchers on the CSC Prototype (miniCSC) project at CERN by Shane Pack & Dylan Parks.
 
-## Getting ROOT Installed Locally:
+## Introduction:
+
+To familiarize yourself with Cathode Strip Chambers (CSCs) in the CMS, and the motivation for the CSC Prototypes (aptly named 'miniCSCs'), we recommend reading the following material:
+  - [Longevity studies of CSC prototypes operating with Ar+CO 2 gas mixture and different fractions of CF 4](https://link.springer.com/content/pdf/10.1140/epjp/s13360-023-04679-7.pdf) 
+  - [Searches for CF4 replacement for the CSC gas mixture](https://indico.cern.ch/event/1022051/contributions/4319536/attachments/2231279/3780771/CSCsearchNewGas_210422_MiniWorkshop.pdf) (This details the primary goal of the research!)
+
+Don't worry if the contents of the paper and slides are difficult to follow, you'll gain an understanding of the unfamiliar terms and concepts as you are introduced to the project!
+
+
+  - The following sections are dedicated to personal system set-up for **future miniCSC researchers**, focusing primarily on setting up ROOT. 
+
+***Note:** Access to the data acquisition guides on tWiki requires a **'CERN Single Sign-On'** login.*
+
+## Getting ROOT (C++ version) Installed Locally:
 
 **You can choose to either use ROOT with C++ or Python. _We used C++!_**
 
@@ -15,9 +28,11 @@ Cataloged work on the CSC Prototype (miniCSC) project at CERN by Shane Pack & Dy
 
     [Official ROOT Install Guide](https://root.cern/install/)
 
+***Note:** You can use ROOT with Python with PyROOT, however, **the content provided in this repository was completed using ROOT for C++.***
+
 ## Learning ROOT Resources:
 
-There are a LOT of possibilities (and libraries) associated with ROOT, these are the resources we found most helpful:
+There are a lot of possibilities (and libraries) associated with ROOT, these are the resources we found most helpful:
 
   - [Official ROOT Tutorials](https://root.cern/doc/master/group__Tutorials.html)
   - [Offcial ROOT Manual](https://root.cern/manual/functional_parts/)
@@ -29,7 +44,7 @@ There are a LOT of possibilities (and libraries) associated with ROOT, these are
 
 ## LXPLUS Access & Data Aquisition:
 
-  Accessing LXPLUS and getting setup to properly perform DAQ and retrieve data from tests run on the miniCSCs can be a bit tricky, 
+  Accessing LXPLUS and getting set up to properly perform DAQ and retrieve data from tests run on the miniCSCs can be a bit tricky, 
   so we highly recommend following [our step-by-step setup guide available on the 'CSCProto@904' TWiki page.](https://twiki.cern.ch/twiki/bin/view/CMS/DAQminiCSC)
 
   > [!TIP]
