@@ -74,11 +74,13 @@ process.test904 = cms.EDAnalyzer(
     rootFileName=cms.untracked.string("output.root"),
     # Hardcoded width of charge spectra in strips.
     # When plotting change spectra it will use x number of strips in it's analysis.
+    # Cadmiun should be between 3 and 5.
+    # NOTE: Based on fired strips graph, values of 7 or 8 could also be good. After 8 though, really only seems to be noise.
     stripWidthCharges=cms.uint32(5),
     # Controls threshold needed for valid strip signal.
     # If any timebin - pedestal > threshold then we consider it a valid signal.
     # Real CSCs use 13, experimentation is allowed.
-    adcThreshold=cms.uint32(32),
+    adcThreshold=cms.uint32(13),
 )
 
 # process.p = cms.Path( process.muonCSCDigis * process.csc2DRecHits * process.gif)

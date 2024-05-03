@@ -5,7 +5,7 @@
 //
 /**\class MiniCSC MiniCSC.cc MiniCSC/MiniCSC/plugins/MiniCSC.cc
 
- Description: [one line class summary]
+ Description: Analyzes Unpacked MiniCSC Digis
 
  Implementation:
      [Notes on implementation]
@@ -13,11 +13,9 @@
 //
 // Original Author:  Katerina Kuznetsova
 //         Created:  Tue, 27 Feb 2024 14:21:40 GMT
+// Modified By:  Dylan Parks
 //
 //
-
-// :set tabstop=2
-// :set shiftwidth=2
 
 // system include files
 #include <iostream>
@@ -138,6 +136,8 @@ private:
   TH1I *firedStrips;
   /// Time bin distribution for all strips in all layers. Shows where in each event a strip fires
   TProfile *chargeTBinProfile;
+  /// Maybe represents average charge for fired strip width. Data wasn't super useful but you can have this graph now :)
+  TProfile *firedStripsADC;
 
   // Methods ======================================================
 
@@ -153,6 +153,7 @@ private:
   void handleCathodes(const edm::Handle<CSCStripDigiCollection> strips, const edm::Handle<CSCCLCTDigiCollection> clct);
 };
 
+// Constructor only grabs config options from the caller. Initialization happens in MiniCSC::beginJob.
 MiniCSC::MiniCSC(const edm::ParameterSet &iConfig) {
   // Reading all event tags from the python config
   stripDigiTag = iConfig.getParameter<edm::InputTag>("stripDigiTag");
@@ -184,6 +185,7 @@ MiniCSC::MiniCSC(const edm::ParameterSet &iConfig) {
 // ------------ method called once each job just before starting event loop
 // ------------
 void MiniCSC::beginJob() {
+  // Title and name buffers
   char t1[250], t2[250];
   // Setup root file
   fout = new TFile(theRootFileName.c_str(), "RECREATE");
@@ -214,7 +216,10 @@ void MiniCSC::beginJob() {
     // Cathode plots
     sprintf(t1, "chargeL%d", i + 1);
     sprintf(t2, "Charge Spectra for Layer = %d;Charge in adc channels;Number of events", i + 1);
-    charges[i] = new TH1D(t1, t2, 3 * 4096, 0.5, stripWidthChg_ * 4096 + 0.5);  // 4096, 4095
+    // 4096 is the maximum adc value, 1 ADC for each bin,
+    // NOTE: I changed numbinsx from 3 * 4096 to stripWidthChg_ * 4096 on the last day.
+    // Should be correct but if things are acting weird revert the change and test further.
+    charges[i] = new TH1D(t1, t2, stripWidthChg_ * 4096, 0.5, stripWidthChg_ * 4096 + 0.5);  // 4096, 4095
 
     sprintf(t1, "stripL%d", i + 1);
     sprintf(t2, "Strip Occupancy for Layer = %d;Strip;Number of events", i + 1);
@@ -224,7 +229,6 @@ void MiniCSC::beginJob() {
     sprintf(t2, "HalfStrip Occupancy for Layer = %d;Cathode HalfStrip;Number of events", i + 1);
     halfStrip[i] = new TH1D(t1, t2, numHalfStrip, 0.5, numHalfStrip + 0.5);
 
-    // NOTE: Cuts off first 2 time bins since those are used for pedestal
     sprintf(t1, "stripTBinADCValL%d", i + 1);
     sprintf(t2, "Layer = %d;Time bin;Strip number", i + 1);
     absADCVal[i] = new TH2F(t1, t2, 8, -0.5, 7.5, numStrip, stripLow, stripHigh);
@@ -253,9 +257,12 @@ void MiniCSC::beginJob() {
   chargeTBinProfile = new TProfile(t1, t2, 8, -0.5, 7.5);
 
   firedWireGroups =
-      new TH1I("firedWireGroup", "Number of Fired Wire Groups;Wiregroups;Number of events", 20, -0.5, 20.5);
+      new TH1I("firedWireGroup", "Number of Fired Wire Groups;Wiregroups;Number of events", 20, 0.5, 20.5);
 
-  firedStrips = new TH1I("firedStrip", "Number of Fired Strips;Strip;Number of events", 20, -0.5, 20.5);
+  sprintf(t2, "Number of Fired Strips, ADC Threshold = %d;Number of Strips;Number of events", adcThres_);
+  firedStrips = new TH1I("firedStrip", t2, 20, 0.5, 20.5);
+
+  firedStripsADC = new TProfile("firedStripsADC", "Average Charge per Strip Width;Number of Strips;ADC", 20, 0.5, 20.5);
 }
 
 // MiniCSC::~MiniCSC() {}
@@ -364,11 +371,9 @@ void MiniCSC::handleCathodes(const edm::Handle<CSCStripDigiCollection> strips,
       std::vector<CSCStripDigi>::const_iterator nStripIt = stripIt + 1;
       bool was_signal = false;
       while (nextStrip) {
-        nStriph++;
-
-        // ADCVals returns a vector containing the adc value for each time bin. The position in the vector is equal to the time bin.
-        // here is an example, I used made up numbers however the general shape should be similar (bell curve):
-        // Time Bin  0    1    2    3    4    5    6    7
+        // getADCCounts() returns a vector containing the adc value for each time bin. The position in the vector is equal to the time bin.
+        // Here is an example, I used made up numbers however the general shape should be similar (bell curve ish):
+        // Time Bin    0    1    2    3    4    5    6    7
         // ADC Value 1023 1025 1126 1354 1232 1158 1089 1025
         std::vector<int> ADCVals = stripIt->getADCCounts();
         int strNum = stripIt->getStrip();  // 1->16
@@ -388,7 +393,7 @@ void MiniCSC::handleCathodes(const edm::Handle<CSCStripDigiCollection> strips,
           fstPedestal[currLayer]->Fill(strNum, ped);
         }
 
-        // Determines if the strip has fired by checking if any time bin  is 13 ADC greater than the pedestal
+        // Determines if the strip has fired by checking if any time bin is <adcThres_> ADC greater than the pedestal
         was_signal = false;
         for (size_t k = 0; k < ADCVals.size(); k++) {
           if ((ADCVals[k] - ped) > adcThres_) {
@@ -398,6 +403,7 @@ void MiniCSC::handleCathodes(const edm::Handle<CSCStripDigiCollection> strips,
         }
 
         if (was_signal) {
+          nStriph++;
           // Total charge from all time bins for strip
           float sumChargesStrip = 0.0f;
 
@@ -440,15 +446,18 @@ void MiniCSC::handleCathodes(const edm::Handle<CSCStripDigiCollection> strips,
     }  // all strips
 
     float sumCharges = 0.0f;
-    // Sort the charges from least to greatest
+    int width = 0;
+    // Sort the charges from greatest to least
     sort(chgPerStrip.begin(), chgPerStrip.end(), std::greater<float>());
     // Only fill top 3-5 stips (depends on config), also makes sure we don't go past the end of the vector
     for (size_t i = 0; i < chgPerStrip.size() && i < static_cast<size_t>(stripWidthChg_); i++) {
       sumCharges += chgPerStrip[i];
+      width++;
     }
     // This checks that we have a valid charge level, removes extra entries at 0.
     if (sumCharges > 0.0f) {
       charges[currLayer]->Fill(sumCharges);
+      firedStripsADC->Fill(width, sumCharges);
     }
   }  // strip collection
 
@@ -535,6 +544,7 @@ void MiniCSC::endJob() {
   }
   fout->cd("/Cathode/");
   firedStrips->Write();
+  firedStripsADC->Write();
   chargeTBinProfile->Write();
   fout->Close();
 
@@ -553,6 +563,7 @@ void MiniCSC::endJob() {
   firedWireGroups->Delete();
   firedStrips->Delete();
   chargeTBinProfile->Delete();
+  firedStripsADC->Delete();
 }
 
 /*
