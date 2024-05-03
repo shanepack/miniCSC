@@ -10,11 +10,11 @@
 #include <iostream>
 
 /// minimum x value for peak1, just give it a good guess
-static const size_t peak1_min = 800;
+static const size_t peak1_min = 900;
 /// maximum x value for peak1, just give it a good guess
 static const size_t peak1_max = 2200;
 /// minimum x value for peak2, just give it a good guess
-static const size_t peak2_min = 2500;
+static const size_t peak2_min = 2700;
 /// maximum x value for peak2, just give it a good guess
 static const size_t peak2_max = 8000;
 /// true if cadmium (has two peaks)
@@ -23,7 +23,7 @@ static const bool two_peaks = true;
 /// Use this to fit a charge spectra
 void chargeFit()
 {
-    MiniCSCData mdata("./3600V-D.root");
+    MiniCSCData mdata("./r78_thres32.root");
 
     TH1D* chg = mdata.ChargeSpectra()[2];
     chg->Rebin(32);
@@ -46,4 +46,5 @@ void chargeFit()
     if (two_peaks) chg->Fit(g2, "R+");
 
     chg->Draw();
+    chg->GetXaxis()->SetRangeUser(0.5, 10000.5);
 }

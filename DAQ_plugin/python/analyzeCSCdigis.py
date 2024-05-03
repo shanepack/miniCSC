@@ -79,8 +79,8 @@ process.test904 = cms.EDAnalyzer(
     stripWidthCharges=cms.uint32(5),
     # Controls threshold needed for valid strip signal.
     # If any timebin - pedestal > threshold then we consider it a valid signal.
-    # Real CSCs use 13, experimentation is allowed.
-    adcThreshold=cms.uint32(13),
+    # Real CSCs use 13, experimentation is allowed. 32 has worked well.
+    adcThreshold=cms.uint32(32),
 )
 
 # process.p = cms.Path( process.muonCSCDigis * process.csc2DRecHits * process.gif)
